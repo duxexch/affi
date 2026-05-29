@@ -1,6 +1,5 @@
 import { logger } from "./lib/logger.js";
 import { validateEnv } from "./lib/env.js";
-import { startIndexingWorker } from "./services/indexNow.js";
 
 process.on("uncaughtException", (err) => {
   console.error("uncaughtException", err);
@@ -34,5 +33,8 @@ app.listen(safePort, "0.0.0.0", (err) => {
     process.exit(1);
   }
   logger.info({ port: safePort }, "Server listening");
-  startIndexingWorker();
+
+  import("./services/indexNow.js").then(({ startIndexingWorker }) => {
+    startIndexingWorker();
+  });
 });
