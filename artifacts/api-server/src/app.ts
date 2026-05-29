@@ -6,6 +6,9 @@ import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
 import router from "./routes/index.js";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { logger } from "./lib/logger.js";
 import { requestIdMiddleware } from "./middleware/requestId.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -14,6 +17,21 @@ import { validateEnv } from "./lib/env.js";
 validateEnv();
 
 const app: Express = express();
+
+const serverDir = path.dirname(fileURLToPath(import.meta.url));
+const staticDir = path.resolve(serverDir, "..", "..", "affiliate-deals", "dist", "public");
+
+if (existsSync(staticDir)) {
+  logger.info({ staticDir }, "Serving React static files");
+  app.use(express.static(staticDir));
+
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(staticDir, "index.html"));
+  });
+} else {
+  logger.warn({ staticDir }, "React static files not found; skipping static serving");
+}
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
