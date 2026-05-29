@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock'",
+    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock && corepack prepare pnpm@9 --activate'",
     "postinstall": "pnpm install --no-frozen-lockfile",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "pnpm exec tsc --build",
