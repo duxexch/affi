@@ -19,7 +19,10 @@ validateEnv();
 const app: Express = express();
 
 const serverDir = path.dirname(fileURLToPath(import.meta.url));
-const staticDir = path.resolve(serverDir, "..", "..", "affiliate-deals", "dist", "public");
+const distPublicDir = path.resolve(serverDir, "..", "..", "affiliate-deals", "dist", "public");
+const distDir = path.resolve(serverDir, "..", "..", "affiliate-deals", "dist");
+
+const staticDir = existsSync(distPublicDir) ? distPublicDir : distDir;
 
 if (existsSync(staticDir)) {
   logger.info({ staticDir }, "Serving React static files");
@@ -32,7 +35,10 @@ if (existsSync(staticDir)) {
     res.sendFile(path.join(staticDir, "index.html"));
   });
 } else {
-  logger.warn({ staticDir }, "React static files not found; skipping static serving");
+  logger.warn(
+    { distPublicDir, distDir },
+    "React static files not found; skipping static serving",
+  );
 }
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
