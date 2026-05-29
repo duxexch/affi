@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "preinstall": "corepack prepare pnpm@9 --activate && (if exist package-lock.json del /f /q package-lock.json) && (if exist yarn.lock del /f /q yarn.lock)",
+    "preinstall": "corepack prepare pnpm@9 --activate && node -e \"const fs=require('fs'); for (const f of ['package-lock.json','yarn.lock']) { try { fs.rmSync(f,{force:true}); } catch(e) {} }\"",
     "build": "corepack pnpm run typecheck && corepack pnpm -r --if-present run build",
     "typecheck:libs": "corepack pnpm exec tsc --build",
     "typecheck": "corepack pnpm run typecheck:libs && corepack pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
