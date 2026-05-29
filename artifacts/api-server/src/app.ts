@@ -25,7 +25,7 @@ if (existsSync(staticDir)) {
   logger.info({ staticDir }, "Serving React static files");
   app.use(express.static(staticDir));
 
-  app.get("*", (req, res, next) => {
+  app.get("/*", (req, res, next) => {
     if (req.path.startsWith("/api")) return next();
     res.sendFile(path.join(staticDir, "index.html"));
   });
