@@ -40,4 +40,5 @@ function getMysqlConfig(): mysql.PoolOptions {
 export const pool = mysql.createPool(getMysqlConfig());
 export const db = drizzle(pool, { schema: drizzleSchema, mode: "default" as const }) as any;
 
-export * from "./schema";
+export { usersTable } from "./schema/users";
+export { sessionsTable } from "./schema/sessions";
