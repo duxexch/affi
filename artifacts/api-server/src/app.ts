@@ -25,7 +25,9 @@ if (existsSync(staticDir)) {
   logger.info({ staticDir }, "Serving React static files");
   app.use(express.static(staticDir));
 
-  app.get("/*", (req, res, next) => {
+  // Express 5 (path-to-regexp) can crash on wildcard route patterns like "/*".
+  // Use middleware fallback instead of a wildcard route.
+  app.use((req, res, next) => {
     if (req.path.startsWith("/api")) return next();
     res.sendFile(path.join(staticDir, "index.html"));
   });
