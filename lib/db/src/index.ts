@@ -1,6 +1,15 @@
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
-import * as schema from "./schema";
+
+import { usersTable } from "./schema/users";
+import { sessionsTable } from "./schema/sessions";
+
+// نُسند drizzle schema فقط لـ users/sessions عشان auth يشتغل
+// (باقي الجداول ممكن تكون لسه Postgres-core وتسبب crash/503 لو دخلت في schema الخاص بـ drizzle)
+const drizzleSchema = {
+  usersTable,
+  sessionsTable,
+};
 
 function getMysqlConfig(): mysql.PoolOptions {
   const host = process.env.DB_HOST;
@@ -14,28 +23,21 @@ function getMysqlConfig(): mysql.PoolOptions {
     ["DB_USER", user],
     ["DB_PASSWORD", password],
     ["DB_NAME", database],
-  ].filter(([, v]) => !v).map(([k]) => k);
+  ].filter(([, v]) => !v)
+    .map(([k]) => k);
 
   if (missing.length > 0) {
-    throw new Error(
-      `DB_* variables incomplete. Missing: ${missing.join(", ")}`,
-    );
+    throw new Error(`DB_* variables incomplete. Missing: ${missing.join(", ")}`);
   }
 
   if (Number.isNaN(port) || port <= 0) {
     throw new Error(`Invalid DB_PORT: "${process.env.DB_PORT ?? ""}"`);
   }
 
-  return {
-    host,
-    user,
-    password,
-    database,
-    port,
-  };
+  return { host, user, password, database, port };
 }
 
 export const pool = mysql.createPool(getMysqlConfig());
-export const db = drizzle(pool, { schema, mode: "default" as const });
+export const db = drizzle(pool, { schema: drizzleSchema, mode: "default" as const }) as any;
 
 export * from "./schema";
