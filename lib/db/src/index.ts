@@ -12,7 +12,11 @@ const drizzleSchema = {
 };
 
 function getMysqlConfig(): mysql.PoolOptions {
-  const host = process.env.DB_HOST;
+  const rawHost = process.env.DB_HOST;
+  const host =
+    rawHost === "localhost" || rawHost === "::1" || rawHost === undefined || rawHost === ""
+      ? "127.0.0.1"
+      : rawHost;
   const user = process.env.DB_USER;
   const password = process.env.DB_PASSWORD;
   const database = process.env.DB_NAME;
