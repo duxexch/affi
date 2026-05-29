@@ -12,11 +12,18 @@ process.on("unhandledRejection", (reason) => {
   logger.error({ reason }, "unhandledRejection");
 });
 
-// IMPORTANT:
-// validateEnv MUST run before importing modules that read JWT secrets at module-load time.
-validateEnv();
-
-const { default: app } = await import("./app.js");
+/**
+ * IMPORTANT:
+ * validateEnv MUST run before importing modules that read JWT secrets at module-load time.
+ * Also, avoid top-level await to reduce runtime incompatibilities.
+ */
+try {
+  validateEnv();
+} catch (err) {
+  console.error("validateEnv failed:", err);
+  logger.error({ err }, "validateEnv failed");
+  process.exit(1);
+}
 
 const rawPort = process.env["WEBSITES_PORT"] ?? process.env["PORT"] ?? "3000";
 const port = Number(rawPort);
@@ -27,14 +34,22 @@ if (Number.isNaN(port) || port <= 0) {
 
 const safePort = Number.isNaN(port) || port <= 0 ? 3000 : port;
 
-app.listen(safePort, "0.0.0.0", (err) => {
-  if (err) {
-    logger.error({ err, safePort }, "Error listening on port");
-    process.exit(1);
-  }
-  logger.info({ port: safePort }, "Server listening");
+import("./app.js")
+  .then(({ default: app }) => {
+    app.listen(safePort, "0.0.0.0", (err) => {
+      if (err) {
+        logger.error({ err, safePort }, "Error listening on port");
+        process.exit(1);
+      }
+      logger.info({ port: safePort }, "Server listening");
 
-  import("./services/indexNow.js").then(({ startIndexingWorker }) => {
-    startIndexingWorker();
+      import("./services/indexNow.js").then(({ startIndexingWorker }) => {
+        startIndexingWorker();
+      });
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to import app:", err);
+    logger.error({ err }, "Failed to import app");
+    process.exit(1);
   });
-});
