@@ -1,6 +1,8 @@
 import { logger } from "./lib/logger.js";
 import { validateEnv } from "./lib/env.js";
 
+console.log("[BOOT] api-server entry");
+
 process.on("uncaughtException", (err) => {
   console.error("uncaughtException", err);
   logger.error({ err }, "uncaughtException");
@@ -18,7 +20,9 @@ process.on("unhandledRejection", (reason) => {
  * Also, avoid top-level await to reduce runtime incompatibilities.
  */
 try {
+  console.log("[BOOT] validateEnv starting");
   validateEnv();
+  console.log("[BOOT] validateEnv OK");
 } catch (err) {
   console.error("validateEnv failed:", err);
   logger.error({ err }, "validateEnv failed");
