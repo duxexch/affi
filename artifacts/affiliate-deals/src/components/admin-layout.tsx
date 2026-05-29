@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { TranslationIFrame } from "@/components/translation-iframe";
+import { GoogleTranslateClone } from "@/components/google-translate-clone";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation as useWouter } from "wouter";
@@ -96,7 +96,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         </header>
 
         <div className="flex-1 p-6 md:p-8 overflow-auto">
-          <TranslationIFrame scope="admin">{children}</TranslationIFrame>
+          <GoogleTranslateClone scope="admin">{children}</GoogleTranslateClone>
         </div>
       </main>
     </div>
