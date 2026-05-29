@@ -29,29 +29,24 @@ try {
   process.exit(1);
 }
 
-const rawPort = process.env["WEBSITES_PORT"] ?? process.env["PORT"] ?? "8080";
+const rawPort = process.env["WEBSITES_PORT"] ?? process.env["PORT"] ?? "3000";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   logger.warn({ rawPort }, "Invalid PORT value; falling back to 3000");
 }
 
-const safePort = Number.isNaN(port) || port <= 0 ? 8080 : port;
+const safePort = Number.isNaN(port) || port <= 0 ? 3000 : port;
 
 import("./app.js")
   .then(({ default: app }) => {
-    // Hostinger may proxy to a specific port; listen on multiple common ports to ensure availability.
-    const portsToTry = Array.from(new Set([safePort, 3000, 8080]));
-
-    for (const p of portsToTry) {
-      app.listen(p, "0.0.0.0", (err) => {
-        if (err) {
-          logger.error({ err, p }, "Error listening on port");
-          return;
-        }
-        logger.info({ port: p }, "Server listening");
-      });
-    }
+    app.listen(safePort, "0.0.0.0", (err) => {
+      if (err) {
+        logger.error({ err, safePort }, "Error listening on port");
+        process.exit(1);
+      }
+      logger.info({ port: safePort }, "Server listening");
+    });
 
     import("./services/indexNow.js").then(({ startIndexingWorker }) => {
       startIndexingWorker();
