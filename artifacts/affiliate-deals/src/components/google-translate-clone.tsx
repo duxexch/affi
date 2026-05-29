@@ -123,7 +123,7 @@ export function GoogleTranslateClone({
           </div>
 
           {/* Clone: Google is allowed to mutate this */}
-          <div ref={cloneRef} style={{ display: "none" }} />
+            <div ref={cloneRef} style={{ display: isTranslated ? "" : "none" }} />
       </>
   );
 }
