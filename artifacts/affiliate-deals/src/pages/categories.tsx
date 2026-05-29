@@ -23,9 +23,9 @@ export default function Categories() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {Array.from({ length: 12 }).map((_, i) => <CategoryCardSkeleton key={i} />)}
         </div>
-      ) : categories && categories.length > 0 ? (
+      ) : Array.isArray(categories) && categories.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {categories.map(category => <CategoryCard key={category.id} category={category} />)}
+            {categories.slice(0).map(category => <CategoryCard key={category.id} category={category} />)}
         </div>
       ) : (
         <div className="text-center py-12 text-muted-foreground bg-muted/30 rounded-lg">

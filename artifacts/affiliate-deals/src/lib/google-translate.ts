@@ -53,9 +53,11 @@ const WIDGET_CONTAINER_ID = "google_translate_element";
 const USER_LS_KEY = "affiliateDeals.lang";
 const ADMIN_LS_KEY = "affiliateDeals.adminLang";
 
-function getLocalStorageLang(): GoogleLangCode | null {
+const HIDE_STYLE_ID = "affiliate-deals-google-translate-hide-style";
+
+function getLocalStorageLang(key: string): GoogleLangCode | null {
     try {
-        const raw = localStorage.getItem(USER_LS_KEY);
+        const raw = localStorage.getItem(key);
         if (!raw) return null;
         const allowed = new Set(LANGUAGE_OPTIONS.map((l) => l.code));
         if (!allowed.has(raw as GoogleLangCode)) return null;
@@ -66,14 +68,13 @@ function getLocalStorageLang(): GoogleLangCode | null {
 }
 
 export function getPreferredGoogleLang(): GoogleLangCode {
-    const stored = typeof window !== "undefined" ? getLocalStorageLang() : null;
+    const stored = typeof window !== "undefined" ? getLocalStorageLang(USER_LS_KEY) : null;
     if (stored) return stored;
 
     const nav = typeof navigator !== "undefined" ? navigator.language : undefined;
     if (!nav) return DEFAULT_PAGE_LANGUAGE;
 
     const lower = nav.toLowerCase();
-    // very small heuristic
     if (lower.startsWith("ar")) return "ar";
     if (lower.startsWith("fr")) return "fr";
     if (lower.startsWith("es")) return "es";
@@ -103,27 +104,14 @@ export function setPreferredGoogleLang(lang: GoogleLangCode): void {
 }
 
 export function getPreferredGoogleLangForAdmin(): GoogleLangCode {
-    const stored = typeof window !== "undefined"
-        ? (() => {
-            try {
-                const raw = localStorage.getItem(ADMIN_LS_KEY);
-                if (!raw) return null;
-                const allowed = new Set(LANGUAGE_OPTIONS.map((l) => l.code));
-                if (!allowed.has(raw as GoogleLangCode)) return null;
-                return raw as GoogleLangCode;
-            } catch {
-                return null;
-            }
-        })()
-        : null;
-
+    const stored =
+        typeof window !== "undefined" ? getLocalStorageLang(ADMIN_LS_KEY) : null;
     if (stored) return stored;
 
     const nav = typeof navigator !== "undefined" ? navigator.language : undefined;
     if (!nav) return DEFAULT_PAGE_LANGUAGE;
 
     const lower = nav.toLowerCase();
-    // very small heuristic
     if (lower.startsWith("ar")) return "ar";
     if (lower.startsWith("fr")) return "fr";
     if (lower.startsWith("es")) return "es";
@@ -152,18 +140,53 @@ export function setPreferredGoogleLangForAdmin(lang: GoogleLangCode): void {
     }
 }
 
-export function setGoogTransCookie(targetLang: GoogleLangCode): void {
-    // Google's cookie format: googtrans=/source/target
-    // Example: googtrans=/en/ar
-    const pageLang = DEFAULT_PAGE_LANGUAGE;
-    const cookieValue = `/` + `${pageLang}/` + `${targetLang}`;
+function ensureHideStyleInjected(): void {
+    if (typeof document === "undefined") return;
+    if (document.getElementById(HIDE_STYLE_ID)) return;
 
-    // Best-effort. Google expects this cookie before widget init.
-    try {
-        document.cookie = `googtrans=${encodeURIComponent(cookieValue)}; path=/; max-age=${60 * 60 * 24 * 365}`;
-    } catch {
-        // ignore
+    const style = document.createElement("style");
+    style.id = HIDE_STYLE_ID;
+
+    // Hide the widget UI/banner injected by Google Translate.
+    // Note: Google uses different containers; we hide the common ones.
+    style.textContent = `
+    body { top: 0 !important; }
+    #google_translate_element, #google_translate_element2 { display: none !important; }
+    .goog-te-banner-frame { display: none !important; }
+    .skiptranslate { display: none !important; }
+    .goog-te-gadget { display: none !important; }
+    iframe.goog-te-banner-frame { display: none !important; }
+    iframe.goog-te-banner-frame { height: 0 !important; }
+    .goog-te-combo { display: none !important; }
+  `;
+
+    document.head.appendChild(style);
+}
+
+function setGoogleTranslateLanguage(targetLang: GoogleLangCode): void {
+    if (typeof document === "undefined") return;
+
+    const trySet = (): boolean => {
+        const select = document.querySelector<HTMLSelectElement>("select.goog-te-combo");
+        if (!select) return false;
+
+        select.value = targetLang;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+    };
+
+    // Retry for a short time because the widget init is async.
+    let attempts = 0;
+    const maxAttempts = 12; // ~6s
+
+    const timer = window.setInterval(() => {
+        attempts += 1;
+        const ok = trySet();
+
+        if (ok || attempts >= maxAttempts) {
+            window.clearInterval(timer);
     }
+  }, 500);
 }
 
 export function ensureGoogleTranslateWidgetInjected(): void {
@@ -171,10 +194,11 @@ export function ensureGoogleTranslateWidgetInjected(): void {
 
     if (document.getElementById(WIDGET_SCRIPT_ID)) return;
 
+    ensureHideStyleInjected();
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
 
-    // Define init callback expected by Google.
     w[WIDGET_INIT_FN] = () => {
         const container = document.getElementById(WIDGET_CONTAINER_ID);
         if (!container) return;
@@ -186,15 +210,20 @@ export function ensureGoogleTranslateWidgetInjected(): void {
 
         const included = LANGUAGE_OPTIONS.map((l) => l.code).join(",");
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // autoDisplay:false prevents Google from showing its own banner/ui.
+        // We then programmatically select the target language.
         new googleW.google.translate.TranslateElement(
             {
                 pageLanguage: DEFAULT_PAGE_LANGUAGE,
                 includedLanguages: included,
-                autoDisplay: true,
-            },
-            container,
-        );
+              autoDisplay: false,
+          },
+          container,
+      );
+
+        // If user already selected a language in localStorage, apply it.
+        const preferred: GoogleLangCode = getPreferredGoogleLang();
+        setGoogleTranslateLanguage(preferred);
     };
 
     const script = document.createElement("script");
@@ -202,7 +231,13 @@ export function ensureGoogleTranslateWidgetInjected(): void {
     script.type = "text/javascript";
     script.async = true;
     script.src = `https://translate.google.com/translate_a/element.js?cb=${encodeURIComponent(WIDGET_INIT_FN)}`;
+
     document.head.appendChild(script);
+}
+
+export function applyGoogleTranslateLanguage(targetLang: GoogleLangCode): void {
+    // Apply immediately if widget already created; otherwise it will be picked on init and/or retry.
+    setGoogleTranslateLanguage(targetLang);
 }
 
 export function getGoogleTranslateWidgetContainerId(): string {

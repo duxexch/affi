@@ -5,9 +5,9 @@ import {
     getPreferredGoogleLang,
     getPreferredGoogleLangForAdmin,
     ensureGoogleTranslateWidgetInjected,
-    setGoogTransCookie,
     setPreferredGoogleLang,
     setPreferredGoogleLangForAdmin,
+    applyGoogleTranslateLanguage,
     LANGUAGE_OPTIONS,
     type GoogleLangCode,
 } from "@/lib/google-translate";
@@ -24,9 +24,8 @@ export function LanguageSwitcher({ scope }: { scope: LanguageScope }) {
 
         setLang(initial);
 
-        // Cookie must be set before Google widget script init.
-        setGoogTransCookie(initial);
         ensureGoogleTranslateWidgetInjected();
+        applyGoogleTranslateLanguage(initial);
     }, [scope]);
 
     const onChange = (next: GoogleLangCode) => {
@@ -35,11 +34,7 @@ export function LanguageSwitcher({ scope }: { scope: LanguageScope }) {
         if (scope === "admin") setPreferredGoogleLangForAdmin(next);
         else setPreferredGoogleLang(next);
 
-        setGoogTransCookie(next);
-
-        // Google Translate cookie is expected before widget initialization.
-        // The safest way to apply target language reliably is reload.
-        window.location.reload();
+        applyGoogleTranslateLanguage(next);
     };
 
     return (
