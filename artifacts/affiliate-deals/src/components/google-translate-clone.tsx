@@ -46,7 +46,6 @@ export function GoogleTranslateClone({
     useEffect(() => {
         const sourceEl = sourceRef.current;
         const cloneEl = cloneRef.current;
-
       if (!sourceEl || !cloneEl) return;
 
       if (!isTranslated) {
@@ -63,7 +62,41 @@ export function GoogleTranslateClone({
       sourceEl.style.display = "none";
       cloneEl.style.display = "";
 
+      // Let DOM settle before applying language.
+      window.setTimeout(() => {
       applyGoogleTranslateLanguage(lang);
+    }, 0);
+  }, [isTranslated, lang]);
+
+    // If React content changes while translation is active (async routes),
+    // re-clone and re-apply language.
+    useEffect(() => {
+        if (!isTranslated) return;
+
+        const sourceEl = sourceRef.current;
+        const cloneEl = cloneRef.current;
+        if (!sourceEl || !cloneEl) return;
+
+        let timer: number | undefined;
+
+        const observer = new MutationObserver(() => {
+            if (timer) window.clearTimeout(timer);
+            timer = window.setTimeout(() => {
+                syncClone(sourceEl, cloneEl);
+                applyGoogleTranslateLanguage(lang);
+            }, 200);
+        });
+
+        observer.observe(sourceEl, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+        });
+
+        return () => {
+            observer.disconnect();
+            if (timer) window.clearTimeout(timer);
+        };
   }, [isTranslated, lang]);
 
     const widgetContainerId = useMemo(() => getGoogleTranslateWidgetContainerId(), []);
