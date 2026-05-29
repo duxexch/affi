@@ -52,6 +52,7 @@ app.use(
         scriptSrc: ["'self'", "https://translate.google.com", "https://www.google.com"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         connectSrc: ["'self'", "https://translate.google.com", "https://www.google.com"],
+        frameSrc: ["'self'", "https://translate.google.com", "https://www.google.com"],
       },
     },
     crossOriginEmbedderPolicy: false,

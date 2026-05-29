@@ -1,31 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-    getGoogleTranslateWidgetContainerId,
     getPreferredGoogleLang,
     getPreferredGoogleLangForAdmin,
-    ensureGoogleTranslateWidgetInjected,
     setPreferredGoogleLang,
     setPreferredGoogleLangForAdmin,
-    applyGoogleTranslateLanguage,
     LANGUAGE_OPTIONS,
     type GoogleLangCode,
 } from "@/lib/google-translate";
 
 type LanguageScope = "user" | "admin";
 
+function dispatchI18nChange(): void {
+    window.dispatchEvent(new Event("affiliateDeals:i18n-change"));
+}
+
 export function LanguageSwitcher({ scope }: { scope: LanguageScope }) {
-    const containerId = useMemo(() => getGoogleTranslateWidgetContainerId(), []);
     const [lang, setLang] = useState<GoogleLangCode>("en");
 
     useEffect(() => {
-        const initial =
-            scope === "admin" ? getPreferredGoogleLangForAdmin() : getPreferredGoogleLang();
-
+        const initial = scope === "admin" ? getPreferredGoogleLangForAdmin() : getPreferredGoogleLang();
         setLang(initial);
-
-        ensureGoogleTranslateWidgetInjected();
-        applyGoogleTranslateLanguage(initial);
     }, [scope]);
 
     const onChange = (next: GoogleLangCode) => {
@@ -34,7 +29,7 @@ export function LanguageSwitcher({ scope }: { scope: LanguageScope }) {
         if (scope === "admin") setPreferredGoogleLangForAdmin(next);
         else setPreferredGoogleLang(next);
 
-        applyGoogleTranslateLanguage(next);
+        dispatchI18nChange();
     };
 
     return (
@@ -51,9 +46,6 @@ export function LanguageSwitcher({ scope }: { scope: LanguageScope }) {
                     ))}
                 </SelectContent>
             </Select>
-
-            {/* Google widget mount point (kept hidden; translation still applies). */}
-            <div id={containerId} className="hidden" />
         </div>
     );
 }
