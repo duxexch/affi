@@ -1,0 +1,330 @@
+# AffiliateDeals — Master Implementation Plan
+**Target:** dux-ex.com · Express + MySQL on Hostinger Passenger · Cloudflare Free in front · React/Vite SPA hydrated over pre-rendered HTML.
+
+This plan keeps every confirmed decision you locked in, but reorders work to remove circular dependencies, adds the missing 20% that turns a spec into a shipped product (i18n, observability, idempotency, rollback, content velocity, crawl analytics, link graph), and tightens each phase with concrete acceptance criteria.
+
+---
+
+## 0. Architectural Ground Rules (apply to every phase)
+
+1. **One source of truth for URLs.** All public URLs are built by a single helper `server/seo/urls.ts → buildUrl(type, slug, params?)`. Sitemap, onPublish, JSON-LD, breadcrumbs, emails — all consume it. Changing a pattern is a one-file change.
+2. **Idempotency by default.** Every queue insert uses `INSERT IGNORE` keyed on `(url, provider, status='pending')`. Every push send is keyed by `(subscription_id, notification_id)` to avoid double sends after a retry.
+3. **No business logic in route handlers.** Routes call services in `server/services/*`. Services are pure(ish) and testable without Express.
+4. **All slugs are immutable after first publish.** Slug change → automatic `redirects` row with 301 (no orphaned URLs, no lost equity).
+5. **All timestamps in UTC.** Convert at render time, never in DB.
+6. **Feature flags via `seo_settings`.** `indexing_enabled`, `push_enabled`, `email_enabled`, `sse_enabled` — instant kill switches without a redeploy.
+7. **Cloudflare is part of the cache stack**, not an afterthought. We emit `s-maxage` + `stale-while-revalidate` so CF absorbs traffic; Hostinger only sees misses.
+8. **Hard cap on memory.** Passenger workers must stay <350 MB. Sitemaps stream, queries paginate, lru-cache max sizes are enforced.
+
+---
+
+## 1. Phase Ordering (corrected)
+
+Your original order had Phase 4 (pipeline) depending on tables Phase 1 creates — fine — but Phase 4 also depends on URL helpers Phase 2 builds. Reordered:
+
+```text
+P1 DB migrations (idempotent, reversible)
+P2 Foundation: config, db pool, lru-cache, urls.ts, logger, error model
+P3 onPublish hook + indexing queue + IndexNow + sitemap ping
+P4 Sitemap index + sub-sitemaps + cache table
+P5 robots.txt + llms.txt + llms-full.txt + JSON-LD builders
+P6 Public routes + pre-render layer + render cache
+P7 Cache headers + compression + security headers + redirects mw
+P8 Web Push (VAPID, SW, subscribe, admin send)
+P9 SSE notification bell
+P10 Email (verify, digest, unsub, suppression)
+P11 Admin dashboards (Indexing, Notifications, Content CRUD)
+P12 SEO hardening (404 suggest, pagination rel, breadcrumbs, related, hreflang)
+P13 Observability, monitoring, crawl analytics, rollback playbook
+```
+
+Each phase ends with a checklist + a smoke test you can run before moving on.
+
+---
+
+## 2. Phase 1 — Database Migrations (MySQL, reversible)
+
+Layout: `server/db/migrations/00X__name.up.sql` + `.down.sql`. A tiny runner (`server/db/migrate.ts`) reads `schema_migrations(version PK, applied_at)` and applies pending up-files in order. Every migration is wrapped in a transaction where MySQL allows.
+
+Migrations:
+- `001_init_seo_extensions` — add `brand_id`, `lastmod`, `noindex`, indexes on `offers` and `categories` (your spec, plus `idx_offers_lastmod` for sitemap streaming, `idx_offers_brand_active`).
+- `002_content_tables` — `brands`, `tags`, `offer_tags`, `blog_posts`, `comparisons`, `tools`, `redirects` (+ FK `offer_tags`→offers/tags ON DELETE CASCADE; comparisons FKs to offers ON DELETE CASCADE).
+- `003_indexing` — `indexing_queue`, `indexing_status`, `sitemap_cache`. **Addition:** `indexing_queue` gets `idempotency_key VARCHAR(191) UNIQUE` = `sha1(url|provider)` so duplicate enqueues are dropped at the DB layer.
+- `004_notifications` — `push_subscriptions`, `email_subscribers`, `notification_logs`. **Addition:** `suppressed_emails(email PK, reason, suppressed_at)` for bounces/complaints; `email_subscribers.locale ENUM('ar','en') DEFAULT 'en'`.
+- `005_seo_settings_flags` — extend `seo_settings` with feature flag booleans (indexing_enabled, push_enabled, email_enabled, sse_enabled), `default_locale`, `og_image_default`.
+- `006_search_index` — MySQL `FULLTEXT(title, short_description, keywords)` on `offers`, used by 404-suggest and `/search`.
+- `007_crawl_log` — `crawl_log(id, bot, path, status, hit_at, INDEX(bot,hit_at))` populated by middleware on UA-match (GPTBot, ClaudeBot, PerplexityBot, GoogleBot, Bingbot, YandexBot, AppleBot). Powers the crawl-analytics dashboard.
+
+**Acceptance:** `npm run migrate:up` and `:down` round-trip on a copy of prod schema with no warnings; existing data preserved.
+
+---
+
+## 3. Phase 2 — Foundation Layer
+
+Files (all TypeScript, strict mode):
+- `server/config.ts` — Zod-validated `env` object, fails fast on boot if any required key missing. Exposes typed `config.site.url = 'https://dux-ex.com'`.
+- `server/db/pool.ts` — `mysql2/promise` pool, `connectionLimit: 5`, `waitForConnections: true`, `enableKeepAlive: true`. Wrappers: `q<T>(sql, params)`, `qOne<T>`, `tx(async cb)`.
+- `server/cache/lru.ts` — typed factory; named instances: `renderCache` (1000, 5 min), `redirectCache` (5000, 1 h), `sitemapMetaCache` (32, 1 h), `llmsCache` (2, 6 h).
+- `server/seo/urls.ts` — canonical URL builder; the **only** place that knows path shapes. Used everywhere.
+- `server/logger.ts` — keeps `pino` (already shipped); adds `requestId` middleware; redacts secrets.
+- `server/errors.ts` — `AppError`, `NotFoundError`, `ValidationError`; central error middleware renders 404 page or JSON depending on `Accept`.
+
+**Acceptance:** boot fails with a clear message if `INDEXNOW_KEY` or `DATABASE_URL` is missing; `tsc --noEmit` passes.
+
+---
+
+## 4. Phase 3 — onPublish + Indexing Pipeline (FIRST, before sitemaps & routes)
+
+Why first: the pipeline + onPublish hook is the contract every later phase plugs into. Build it on a stub URL builder, then routes/sitemaps wire in.
+
+Files:
+- `server/services/indexing/queue.ts` — `enqueueUrl`, `enqueueBatch`, `claimBatch(limit=50)`, `markSent`, `markFailed(backoff)`. Backoff: `min(2^attempts, 60) min`.
+- `server/services/indexing/indexnow.ts` — submits to `api.indexnow.org` and `www.bing.com/indexnow` in parallel. Handles 200, 202, 422 (logs invalid + drops), 429 (Retry-After respected; sets next `scheduled_at`). Max 10,000 URLs/request, but we batch at 1,000 for safety.
+- `server/services/indexing/ping.ts` — Google + Bing sitemap ping. Rate-limited to once per 5 min (cache last call timestamp).
+- `server/services/indexing/worker.ts` — `runWorker()` claims a batch, groups by provider, dispatches, records to `indexing_status`. Every 60th run also calls `pingSitemaps()`.
+- `server/hooks/onPublish.ts` — the **single** chokepoint. Takes `(type, slug, action: 'create'|'update'|'delete')`:
+1. Build URL via `urls.ts`.
+2. If action = delete → enqueue Google's URL removal (sitemap minus + IndexNow with deleted=false isn't supported; rely on 410 response + sitemap delta).
+3. `enqueueUrl(url, type, 'all')`.
+4. `bustSitemapCache(type)` + `bustRenderCache(url)` + invalidate any list pages (e.g. publishing offer X also busts `/category/<X.cat>`, `/brand/<X.brand>`, `/offers` index, homepage).
+5. `maybeNotify(type, slug)` — push/email decision tree.
+6. `crawlAnalytics.recordEvent('publish', url)` — used to compute time-to-index.
+- `server/routes/_internal/cron.ts` — `POST /api/_internal/cron/indexing-worker|sitemap-refresh|digest|cleanup`. Header `X-Cron-Secret` checked via `crypto.timingSafeEqual`. Returns 401 on mismatch; never logs the secret.
+- Static file route `GET /:INDEXNOW_KEY.txt` (matches a regex on env value) returning the key as `text/plain`.
+
+**Acceptance:** publishing a fake offer enqueues exactly one row; running the worker locally (with `INDEXNOW_KEY` set) returns 200 from IndexNow staging; `indexing_status` row written.
+
+---
+
+## 5. Phase 4 — Sitemap Index + Sub-sitemaps
+
+`server/seo/sitemap.ts` exposes:
+- `GET /sitemap.xml` — index (8 children: static, categories, brands, offers-N, blog, tags, compare, tools).
+- `GET /sitemap-:type.xml` and `/sitemap-offers-:n.xml`.
+
+Implementation:
+- **Streaming generation.** Build XML with `xmlbuilder2` in `chunkSize=1000` DB pages; pipe directly to `res`. Never buffer >2 MB in memory.
+- **Storage strategy:** stream the response **and** simultaneously tee into a string we persist into `sitemap_cache` on completion. Next request reads from cache until busted. Cache TTL 1 h, hard bust via `onPublish`.
+- **Chunking:** offers split deterministically by `floor((id-1)/45000)+1`. Adding an offer can only grow the highest-numbered chunk → safe.
+- **Lastmod:** per-URL = row.lastmod; per-sub-sitemap = `MAX(lastmod)`; per-index = `MAX(all)`.
+- **Priorities/changefreq:** as in your spec.
+- **Cache-Control:** `public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800`.
+
+**Acceptance:** with 200 k seeded offers, `/sitemap-offers-5.xml` first request finishes in <3 s, second request <100 ms from cache; total worker RSS stays <350 MB.
+
+---
+
+## 6. Phase 5 — Crawler Surface (robots, llms, JSON-LD)
+
+- `server/seo/robots.ts` — dynamic `GET /robots.txt`, content built from `seo_settings.robots_txt` if non-empty, otherwise default (your spec). Always appends `Sitemap: https://dux-ex.com/sitemap.xml`. Toggling `seo_settings.allow_indexing=0` replaces body with `User-agent: *\nDisallow: /` (kill switch for staging).
+- `server/seo/llms.ts` — `/llms.txt` and `/llms-full.txt`. Cached in `llmsCache` (6 h). `llms-full.txt` enriched with: top 200 offers (title + URL + discount), all active categories/brands, latest 100 blog posts, top 50 comparisons. Plain text, no markdown, UTF-8, ≤ 1 MB.
+- `server/seo/jsonld.ts` — pure builders, one per page type: `homeSchema()`, `offerSchema(o)`, `categorySchema(c, items)`, `brandSchema(b)`, `articleSchema(p)`, `comparisonSchema(c)`, `breadcrumb(items)`, `faq(items)`. Output combined into a single `<script type="application/ld+json">` array. Validated with `schema-dts` types at build time.
+- `server/seo/meta.ts` — `buildMeta({type, data})` returns `{title, description, canonical, ogImage, ogType, robots, hreflangAlternates}` with 60/160 char clamps and `…` truncation on word boundary.
+
+**i18n addition** (Arabic content already exists in DB as `*_ar`): every public route emits `<link rel="alternate" hreflang="ar" href="...?lang=ar">`, `hreflang="en"`, `hreflang="x-default"`. Locale resolved from `?lang=` → cookie → `Accept-Language`. Same URL, query-param switch (cheapest + crawl-safe).
+
+---
+
+## 7. Phase 6 — Public Routes + Pre-Render
+
+Why after pipeline+sitemap+seo: route handlers now compose finished primitives.
+
+- `server/routes/public.ts` registers every URL in your spec.
+- `server/render/prerender.ts` — loads the built `dist/public/index.html` once at boot, locates `<!--app-html-->`, `<!--app-head-->`, `<!--app-state-->` markers. For each request:
+1. Load page data (single query per page; uses prepared statements).
+2. `renderToStaticMarkup(<App route data />)` for body.
+3. Build head HTML: title, meta, canonical, hreflang, OG, Twitter, JSON-LD, breadcrumbs JSON-LD, pagination `rel=prev/next` links.
+4. Inline `window.__INITIAL_DATA__ = …` so React hydrates without a refetch.
+5. Send.
+- `server/middleware/renderCache.ts` — keys = `method + path + query(sorted) + locale`; never caches authenticated requests (cookie sniff); skips when `?nocache=1` with admin cookie.
+- **JSON variants** at `/api/public/*` mirror every page route, return `{data, meta, jsonld}` for client-side route changes (no full page reload).
+- `/search` uses MySQL FULLTEXT with `IN BOOLEAN MODE` and a stoplist; results page emits `<meta name="robots" content="noindex,follow">` (search pages shouldn't be indexed but should pass crawl signals).
+- **Programmatic SEO templates** (the 200 k URL play): `compare/{slugA-vs-slugB}` auto-generated for every pair within the same category whose `is_active=1` AND `is_featured=1` — capped at 50 k pairs by ranking score. Rendered from a template + the two offer rows; quality gate: skip if either offer lacks a long_description.
+
+**Acceptance:** `curl https://dux-ex.com/offers/sample` returns full HTML with `<title>`, JSON-LD, canonical, no `<!--app-html-->` marker leakage; Lighthouse SEO ≥ 95.
+
+---
+
+## 8. Phase 7 — Cache, Compression, Redirects, Security
+
+- `server/middleware/cache.ts` — header rules as in your spec; additionally `Vary: Accept-Encoding, Cookie` on HTML (CF respects cookie variance).
+- `compression` middleware: level 6, threshold 1 KB. **Brotli:** Cloudflare adds Brotli automatically over our gzip; we don't need `shrink-ray`.
+- `server/middleware/redirects.ts` — checks `redirectCache` first; misses query DB; bust on admin update. Supports wildcard `from_path` like `/old-category/*` → `/category/new`.
+- `server/middleware/security.ts` — `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: interest-cohort=()`, `Strict-Transport-Security` (only when CF reports HTTPS).
+- `server/middleware/crawlerLog.ts` — UA regex; writes async (fire-and-forget) to `crawl_log`. Drops on backpressure.
+
+---
+
+## 9. Phase 8 — Web Push
+
+- `web-push` lib; VAPID keys generated via `npm run generate:vapid` script written into `.env` once.
+- Endpoints exactly as your spec, plus:
+- `POST /api/push/test` (admin) — sends to one endpoint for QA.
+- Automatic cleanup: on `410 Gone` or `404`, mark `is_active=0` and add to a `dead_subscriptions` table for analytics.
+- Service worker `public/sw.js` (your spec) + `public/sw-register.ts` imported by the client entry. Versioned (`sw.js?v=<build-hash>`) so updates ship.
+- **Notification batching:** admin sends are queued in a new `push_outbox` table and drained by the worker (500/min cap) to keep Passenger responsive.
+- **Auto-trigger rule** generalised: configurable thresholds in `seo_settings.push_rules` JSON (e.g. `{ "offer": { "discount_min": 50 }, "blog": { "always": true } }`).
+
+---
+
+## 10. Phase 9 — SSE Bell
+
+- `server/routes/sse.ts` — `EventStream` class manages a `Set<Response>`. Heartbeat 25 s (under typical proxy 30 s). On `req.on('close')` removes the response.
+- **Hostinger caveat:** Passenger may buffer; explicitly disable with `X-Accel-Buffering: no` and `res.flushHeaders()`. If you observe buffering, add a 1 KB padding comment on the first message — empirically defeats buffer thresholds.
+- Cap concurrent connections per IP (10) to avoid worker exhaustion.
+- Client `NotificationBell.tsx` uses `EventSource` with exponential backoff (1s→30s, jitter), unread badge persisted in localStorage.
+
+---
+
+## 11. Phase 10 — Email
+
+- `nodemailer` over Brevo SMTP. Pool: `pool: true, maxConnections: 2, maxMessages: 100`.
+- Templates rendered with `@react-email/render` → inline-CSS HTML (Gmail-safe). Templates: `verify`, `weekly_digest`, `deal_alert`, `unsub_confirm`. Stored in `server/email/templates/*.tsx`.
+- One-click unsubscribe: `List-Unsubscribe` + `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers + `/api/email/unsubscribe?token=...` accepting POST.
+- Suppression list check before every send.
+- Digest cron: pulls top 10 offers (rank = `click_count * 0.6 + featured*100 + (lastmod recency)*0.4`); per-subscriber filter; sends in batches of 50; logs each send (`notification_logs.channel='email'`).
+- **DMARC/SPF/DKIM** notes in HOSTINGER_DEPLOY.md (Cloudflare DNS).
+
+---
+
+## 12. Phase 11 — Admin Dashboards
+
+React admin under `/admin/*` (existing). New pages:
+- `/admin/indexing` — stats cards (live from `indexing_queue` aggregates, 30 s polling), table with filters (status, type, date), row actions (Retry, Force Now, Delete), bulk toolbar. **Time-to-index chart**: distribution of `sent_at - created_at` per type from last 7 days. **Crawl-coverage chart**: GoogleBot/Bingbot/GPTBot hits per day from `crawl_log`.
+- `/admin/notifications` — Push/Email/Logs tabs per spec; adds **A/B test** form (split list 50/50, two titles, log winner by CTR after 24 h).
+- `/admin/content/{brands,tags,blog,comparisons,tools,redirects}` — generic CRUD scaffold (`AdminResource<T>` component) — one file per resource, ~40 LoC each. Slug auto-gen with collision check via `/api/admin/slug-check`. Rich text via `@tiptap/react` (already a fit for React 19).
+- `/admin/seo` — edits `seo_settings` (titles, robots overrides, push rules JSON, default OG image, feature flags). Changes hit `bustAllCaches()`.
+
+All admin endpoints behind session auth + CSRF token middleware + per-route Zod validation.
+
+---
+
+## 13. Phase 12 — SEO Hardening
+
+- **404 page** (`server/render/notFound.ts`): tokenise requested path → FULLTEXT search → render up to 6 suggestions + top categories. Responds with HTTP 404 (not 200 — soft 404 is an SEO trap).
+- **410 Gone** for deleted offers/posts (instead of 404): faster de-indexation. `redirects` table can record `status_code=410` with `to_path=''`.
+- **Pagination `rel=prev/next`** + self-canonical on every paginated page (your spec).
+- **Internal linking:** `RelatedOffers` (same category, 6), `SameBrandOffers` (4), `OftenComparedWith` (3 from `comparisons`). Combined → minimum 13 internal links per offer page → crawl depth ≤ 3 from homepage to any offer.
+- **Breadcrumbs** HTML + JSON-LD (built server-side via `jsonld.breadcrumb(...)`).
+- **Image SEO** (Cloudflare handles transforms): every `<img>` has descriptive `alt`, `loading="lazy"` (except LCP), `decoding="async"`, explicit `width`/`height` (CLS).
+- **hreflang + x-default** as in §6.
+- **Auto-301 on slug rename**: admin update handler diffs old vs new slug; if changed, insert `redirects(old → new, 301)` and `onPublish` both URLs.
+
+---
+
+## 14. Phase 13 — Observability, Monitoring, Rollback
+
+- **Health endpoint** `GET /api/_internal/health` — checks DB ping, queue lag (`max(NOW()-scheduled_at)` for pending), sitemap cache freshness; returns 200/503. UptimeRobot pings every 5 min.
+- **Metrics endpoint** `GET /api/_internal/metrics` (admin auth) — JSON with: queue depth, sent/min, push sent/min, SSE clients, cache hit ratios, p50/p95 render time. Surfaced on `/admin/dashboard`.
+- **Error tracking:** Sentry SDK guarded by env (`SENTRY_DSN` optional). Captures unhandled + Express error mw errors.
+- **Crawl analytics:** `/admin/crawl` reads `crawl_log` — bot × day heatmap, top-crawled paths, never-crawled high-priority paths. Drives the next IndexNow batch.
+- **Rollback playbook** in `HOSTINGER_DEPLOY.md`:
+- DB: every migration has `.down.sql`; `npm run migrate:down` reverts last.
+- App: keep last 3 builds in `releases/<timestamp>/`; `app.js` symlinks to `current`. Rollback = re-point symlink + Passenger restart.
+- Kill switches: flip `seo_settings.indexing_enabled / push_enabled / email_enabled / sse_enabled` to stop traffic to a subsystem without redeploying.
+
+---
+
+## 15. Admin "Publish → Auto-URL → Auto-Index" Flow (طلبك الأصلي)
+
+كل عملية حفظ من لوحة الأدمن (offer / category / brand / tag / blog / compare / tool):
+
+1. الـ slug يُولَّد تلقائياً (`slugify` + فحص تفرّد، ولو تغيّر slug موجود يتعمل redirect 301 تلقائي).
+2. الـ trigger في MySQL يحدّث `lastmod = NOW()` (مش هنعتمد على ON UPDATE فقط، عشان UPDATE بدون تغيير ما يحدّثش).
+3. الـ controller يستدعي `onPublish(type, slug, action)` — chokepoint واحد.
+4. النتيجة الفورية:
+- صف جديد في `indexing_queue` (idempotent).
+- بطاقة الـ sitemap الفرعية تتمسح من الكاش → أول طلب يعيد توليدها.
+- كاش الـ render للرابط ده ولكل صفحات القوائم المرتبطة يتمسح.
+- إشعار Push للمشتركين في الفئة/البراند لو شرط الـ `push_rules` متحقق.
+- حدث SSE يتبث لكل العملاء المفتوحين الجرس بتاعهم.
+5. الكرون كل دقيقة → الـ worker يبعت الـ batch لـ IndexNow (Bing + Yandex + Yahoo) ولـ Google/Bing sitemap ping.
+6. لوحة `/admin/indexing` تعرض الحالة لحظة بلحظة: queued / sent / failed، مع retry يدوي، و**time-to-index** (متوسط الفرق بين النشر وأول زيارة Bot للرابط من `crawl_log`).
+7. لو حذفت محتوى → بدل 404 يرجع 410 ويتشال من الـ sitemap في الـ refresh اللي بعده.
+
+النتيجة: من ضغطة "Publish" لحد ظهور الرابط في Bing عادة < دقيقتين، وفي Google خلال ساعات (عن طريق sitemap ping + crawl signals الداخلية).
+
+---
+
+## 16. Complexity & Risk Matrix
+
+| Phase | Complexity | Risk on Hostinger | Mitigation |
+|---|---|---|---|
+| 1 DB migrations | Simple | Low | down-scripts, backup before run |
+| 2 Foundation | Simple | Low | — |
+| 3 Indexing pipeline | Medium | Medium (cron reliability) | UptimeRobot pings cron endpoint as fallback |
+| 4 Sitemaps | Medium | Memory | streaming + chunked queries |
+| 5 Crawler surface | Simple | Low | — |
+| 6 Routes + pre-render | **Complex** | High (Passenger quirks) | static markup (no streams), warm-cache job after deploy |
+| 7 Cache/security | Simple | Low | — |
+| 8 Web Push | Medium | Low | outbox table caps burst |
+| 9 SSE | Medium | **High** (proxy buffering) | flushHeaders, padding, conn cap |
+| 10 Email | Medium | Low | suppression list, pool limits |
+| 11 Admin | Medium | Low | — |
+| 12 SEO hardening | Simple | Low | — |
+| 13 Observability | Simple | Low | — |
+
+---
+
+## 17. New Dependencies (final)
+
+Production:
+`mysql2`, `web-push`, `nodemailer`, `@react-email/render`, `lru-cache`, `react-helmet-async`, `xmlbuilder2`, `slugify`, `compression`, `zod`, `@tiptap/react`, `@tiptap/starter-kit`, `schema-dts` (types only).
+
+Dev/optional:
+`@sentry/node` (guarded), `vitest`, `supertest`, `@types/*`.
+
+Removed from your spec: `node-cron` (Hostinger cPanel Cron is more reliable than in-process schedulers on Passenger).
+
+---
+
+## 18. Environment Variables (final, additive over your list)
+
+Adds to your list:
+```
+DEFAULT_LOCALE=en
+ENABLE_CRAWL_LOG=1
+SENTRY_DSN= # optional
+ADMIN_SESSION_TTL_HOURS=12
+RATE_LIMIT_PUBLIC_RPM=120
+RATE_LIMIT_PUSH_SUBSCRIBE_RPM=20
+```
+
+---
+
+## 19. Cron Jobs (cPanel)
+
+```text
+* * * * * curl -fsS -X POST -H "X-Cron-Secret: $S" https://dux-ex.com/api/_internal/cron/indexing-worker
+*/15 * * * * curl -fsS -X POST -H "X-Cron-Secret: $S" https://dux-ex.com/api/_internal/cron/sitemap-refresh
+0 3 * * * curl -fsS -X POST -H "X-Cron-Secret: $S" https://dux-ex.com/api/_internal/cron/cleanup # prune sent>30d, dead subs, expired tokens
+0 9 * * 1 curl -fsS -X POST -H "X-Cron-Secret: $S" https://dux-ex.com/api/_internal/cron/digest
+0 4 * * 0 curl -fsS -X POST -H "X-Cron-Secret: $S" https://dux-ex.com/api/_internal/cron/regen-llms # rebuild llms-full.txt
+```
+
+---
+
+## 20. Acceptance Criteria (project-level)
+
+- 200k+ URLs discoverable: `/sitemap.xml` index resolves all chunks, total URL count ≥ 200,000 after seeding programmatic compare pages.
+- IndexNow round-trip: publish → `sent_at` set within 90 s; Bing reflects URL within 10 min in 80% of samples.
+- Core Web Vitals on `/offers/:slug` (mobile, CF cached): LCP < 2.5 s, CLS < 0.1, INP < 200 ms.
+- Lighthouse SEO ≥ 95 on every public route type.
+- Passenger worker RSS < 350 MB after 24 h soak test.
+- Zero placeholder strings in shipped HTML (`<!--app-html-->`, `TODO`, `lorem`).
+- Rollback executes in < 2 min from cPanel terminal.
+
+---
+
+## 21. Deliverables Checklist
+
+- [ ] 7 SQL migrations + runner + down-scripts
+- [ ] `server/` modules per phase (config, db, cache, urls, seo, services, hooks, routes, middleware, render)
+- [ ] `public/sw.js`, `public/robots.txt` (fallback), `public/{INDEXNOW_KEY}.txt` placeholder
+- [ ] `client/src/components/{NotificationBell,PushSubscription,Breadcrumbs,RelatedOffers,Pagination}.tsx`
+- [ ] `client/src/admin/{indexing,notifications,brands,tags,blog,comparisons,tools,redirects,seo,crawl}.tsx`
+- [ ] `HOSTINGER_DEPLOY.md` updated (cron, Cloudflare, GSC, rollback)
+- [ ] `.env.example` updated
+- [ ] Smoke-test script `npm run smoke` hitting all critical endpoints
+
+Once you approve this plan I'll start at Phase 1 and ship phase-by-phase with the "✅ Phase N complete — files changed: …" checkpoints you asked for.
