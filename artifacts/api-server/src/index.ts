@@ -2,7 +2,7 @@ import app from "./app.js";
 import { logger } from "./lib/logger.js";
 import { startIndexingWorker } from "./services/indexNow.js";
 
-const rawPort = process.env["PORT"] ?? "3000";
+const rawPort = process.env["WEBSITES_PORT"] ?? process.env["PORT"] ?? "3000";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
