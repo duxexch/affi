@@ -185,8 +185,8 @@ function setGoogleTranslateLanguage(targetLang: GoogleLangCode): void {
 
         if (ok || attempts >= maxAttempts) {
             window.clearInterval(timer);
-    }
-  }, 500);
+        }
+    }, 500);
 }
 
 export function ensureGoogleTranslateWidgetInjected(): void {
