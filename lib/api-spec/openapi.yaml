@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AffiliateDeals API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: offers
+    description: Affiliate offers
+  - name: categories
+    description: Offer categories
+  - name: brands
+    description: Brands / merchants
+  - name: blog
+    description: Blog posts
+  - name: search
+    description: Site-wide search
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +36,853 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Public: Offers ────────────────────────────────────────────────────────
+  /offers:
+    get:
+      operationId: listOffers
+      tags: [offers]
+      summary: List offers
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20 }
+        - in: query
+          name: categorySlug
+          schema: { type: string }
+        - in: query
+          name: brandSlug
+          schema: { type: string }
+        - in: query
+          name: featured
+          schema: { type: boolean }
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferListResponse"
+
+  /offers/{slug}:
+    get:
+      operationId: getOffer
+      tags: [offers]
+      summary: Get offer by slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferDetail"
+        "404":
+          description: Not found
+
+  /offers/{slug}/track:
+    post:
+      operationId: trackOfferClick
+      tags: [offers]
+      summary: Track affiliate link click
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [affiliateUrl]
+                properties:
+                  affiliateUrl: { type: string }
+
+  # ── Public: Categories ────────────────────────────────────────────────────
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List categories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  /categories/{slug}:
+    get:
+      operationId: getCategory
+      tags: [categories]
+      summary: Get category info
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "404":
+          description: Not found
+
+  # ── Public: Brands ────────────────────────────────────────────────────────
+  /brands:
+    get:
+      operationId: listBrands
+      tags: [brands]
+      summary: List brands
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+
+  /brands/{slug}:
+    get:
+      operationId: getBrand
+      tags: [brands]
+      summary: Get brand info
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Brand"
+        "404":
+          description: Not found
+
+  # ── Public: Blog ──────────────────────────────────────────────────────────
+  /blog:
+    get:
+      operationId: listBlogPosts
+      tags: [blog]
+      summary: List blog posts
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 12 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPostListResponse"
+
+  /blog/{slug}:
+    get:
+      operationId: getBlogPost
+      tags: [blog]
+      summary: Get blog post by slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+        "404":
+          description: Not found
+
+  # ── Public: Search ────────────────────────────────────────────────────────
+  /search:
+    get:
+      operationId: search
+      tags: [search]
+      summary: Full-text search
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+  # ── Admin: Stats ──────────────────────────────────────────────────────────
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Dashboard statistics
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  # ── Admin: Offers ─────────────────────────────────────────────────────────
+  /admin/offers:
+    post:
+      operationId: createOffer
+      tags: [admin]
+      summary: Create offer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+        "400":
+          description: Invalid input
+
+  /admin/offers/{id}:
+    put:
+      operationId: updateOffer
+      tags: [admin]
+      summary: Update offer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteOffer
+      tags: [admin]
+      summary: Delete offer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Admin: Categories ─────────────────────────────────────────────────────
+  /admin/categories:
+    post:
+      operationId: createCategory
+      tags: [admin]
+      summary: Create category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "400":
+          description: Invalid input
+
+  /admin/categories/{id}:
+    put:
+      operationId: updateCategory
+      tags: [admin]
+      summary: Update category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteCategory
+      tags: [admin]
+      summary: Delete category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Admin: Brands ─────────────────────────────────────────────────────────
+  /admin/brands:
+    post:
+      operationId: createBrand
+      tags: [admin]
+      summary: Create brand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrandInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Brand"
+        "400":
+          description: Invalid input
+
+  /admin/brands/{id}:
+    put:
+      operationId: updateBrand
+      tags: [admin]
+      summary: Update brand
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrandUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Brand"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteBrand
+      tags: [admin]
+      summary: Delete brand
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Admin: Blog ───────────────────────────────────────────────────────────
+  /admin/blog:
+    post:
+      operationId: createBlogPost
+      tags: [admin]
+      summary: Create blog post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogPostInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+        "400":
+          description: Invalid input
+
+  /admin/blog/{id}:
+    put:
+      operationId: updateBlogPost
+      tags: [admin]
+      summary: Update blog post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogPostUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteBlogPost
+      tags: [admin]
+      summary: Delete blog post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Admin: Indexing ───────────────────────────────────────────────────────
+  /admin/indexing:
+    get:
+      operationId: listIndexingQueue
+      tags: [admin]
+      summary: Get indexing queue
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, sent, failed]
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexingQueueResponse"
+
+  /admin/indexing/{id}/retry:
+    post:
+      operationId: retryIndexingItem
+      tags: [admin]
+      summary: Retry failed indexing item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexingQueueItem"
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
+        status: { type: string }
+
+    # ── Offer ──────────────────────────────────────────────────────────────
+    Offer:
+      type: object
+      required: [id, title, slug, isActive, isFeatured, clickCount, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        slug: { type: string }
+        shortDescription: { type: ["string", "null"] }
+        discountPercent: { type: ["integer", "null"] }
+        originalPrice: { type: ["number", "null"] }
+        currentPrice: { type: ["number", "null"] }
+        currency: { type: string, default: "USD" }
+        imageUrl: { type: ["string", "null"] }
+        affiliateUrl: { type: string }
+        isActive: { type: boolean }
+        isFeatured: { type: boolean }
+        clickCount: { type: integer }
+        categoryId: { type: ["integer", "null"] }
+        brandId: { type: ["integer", "null"] }
+        categorySlug: { type: ["string", "null"] }
+        brandSlug: { type: ["string", "null"] }
+        categoryName: { type: ["string", "null"] }
+        brandName: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    OfferDetail:
+      type: object
+      required: [id, title, slug, isActive, isFeatured, clickCount, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        slug: { type: string }
+        shortDescription: { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+        discountPercent: { type: ["integer", "null"] }
+        originalPrice: { type: ["number", "null"] }
+        currentPrice: { type: ["number", "null"] }
+        currency: { type: string }
+        imageUrl: { type: ["string", "null"] }
+        affiliateUrl: { type: string }
+        isActive: { type: boolean }
+        isFeatured: { type: boolean }
+        clickCount: { type: integer }
+        categoryId: { type: ["integer", "null"] }
+        brandId: { type: ["integer", "null"] }
+        categorySlug: { type: ["string", "null"] }
+        brandSlug: { type: ["string", "null"] }
+        categoryName: { type: ["string", "null"] }
+        brandName: { type: ["string", "null"] }
+        brandLogoUrl: { type: ["string", "null"] }
+        relatedOffers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    OfferListResponse:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+
+    OfferInput:
+      type: object
+      required: [title, affiliateUrl]
+      properties:
+        title: { type: string, minLength: 1 }
+        slug: { type: string }
+        shortDescription: { type: string }
+        description: { type: string }
+        discountPercent: { type: integer }
+        originalPrice: { type: number }
+        currentPrice: { type: number }
+        currency: { type: string, default: "USD" }
+        imageUrl: { type: string }
+        affiliateUrl: { type: string, minLength: 1 }
+        isActive: { type: boolean, default: true }
+        isFeatured: { type: boolean, default: false }
+        categoryId: { type: integer }
+        brandId: { type: integer }
+
+    OfferUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        slug: { type: string }
+        shortDescription: { type: string }
+        description: { type: string }
+        discountPercent: { type: integer }
+        originalPrice: { type: number }
+        currentPrice: { type: number }
+        currency: { type: string }
+        imageUrl: { type: string }
+        affiliateUrl: { type: string }
+        isActive: { type: boolean }
+        isFeatured: { type: boolean }
+        categoryId: { type: ["integer", "null"] }
+        brandId: { type: ["integer", "null"] }
+
+    # ── Category ──────────────────────────────────────────────────────────
+    Category:
+      type: object
+      required: [id, name, slug, isActive]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        offerCount: { type: integer, default: 0 }
+        isActive: { type: boolean }
+
+    CategoryDetail:
+      type: object
+      required: [id, name, slug, isActive, offers]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        isActive: { type: boolean }
+        offers:
+          $ref: "#/components/schemas/OfferListResponse"
+
+    CategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        slug: { type: string }
+        description: { type: string }
+        imageUrl: { type: string }
+        isActive: { type: boolean, default: true }
+
+    CategoryUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        slug: { type: string }
+        description: { type: string }
+        imageUrl: { type: string }
+        isActive: { type: boolean }
+
+    # ── Brand ─────────────────────────────────────────────────────────────
+    Brand:
+      type: object
+      required: [id, name, slug, isActive]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: ["string", "null"] }
+        logoUrl: { type: ["string", "null"] }
+        websiteUrl: { type: ["string", "null"] }
+        offerCount: { type: integer, default: 0 }
+        isActive: { type: boolean }
+
+    BrandDetail:
+      type: object
+      required: [id, name, slug, isActive, offers]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: ["string", "null"] }
+        logoUrl: { type: ["string", "null"] }
+        websiteUrl: { type: ["string", "null"] }
+        isActive: { type: boolean }
+        offers:
+          $ref: "#/components/schemas/OfferListResponse"
+
+    BrandInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        slug: { type: string }
+        description: { type: string }
+        logoUrl: { type: string }
+        websiteUrl: { type: string }
+        isActive: { type: boolean, default: true }
+
+    BrandUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        slug: { type: string }
+        description: { type: string }
+        logoUrl: { type: string }
+        websiteUrl: { type: string }
+        isActive: { type: boolean }
+
+    # ── BlogPost ──────────────────────────────────────────────────────────
+    BlogPost:
+      type: object
+      required: [id, title, slug, isPublished, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        slug: { type: string }
+        excerpt: { type: ["string", "null"] }
+        content: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        isPublished: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    BlogPostListResponse:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlogPost"
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+
+    BlogPostInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        slug: { type: string }
+        excerpt: { type: string }
+        content: { type: string }
+        imageUrl: { type: string }
+        isPublished: { type: boolean, default: false }
+
+    BlogPostUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        slug: { type: string }
+        excerpt: { type: string }
+        content: { type: string }
+        imageUrl: { type: string }
+        isPublished: { type: boolean }
+
+    # ── Search ────────────────────────────────────────────────────────────
+    SearchResultItem:
+      type: object
+      required: [id, type, title, slug]
+      properties:
+        id: { type: integer }
+        type:
+          type: string
+          enum: [offer, category, brand, blog]
+        title: { type: string }
+        slug: { type: string }
+        imageUrl: { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+
+    SearchResults:
+      type: object
+      required: [items, total, page, query]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResultItem"
+        total: { type: integer }
+        page: { type: integer }
+        query: { type: string }
+
+    # ── Admin ─────────────────────────────────────────────────────────────
+    AdminStats:
+      type: object
+      required: [totalOffers, activeOffers, featuredOffers, totalCategories, totalBrands, totalBlogPosts, publishedBlogPosts, totalClicks, pendingIndexing, failedIndexing, topOffers, recentOffers]
+      properties:
+        totalOffers: { type: integer }
+        activeOffers: { type: integer }
+        featuredOffers: { type: integer }
+        totalCategories: { type: integer }
+        totalBrands: { type: integer }
+        totalBlogPosts: { type: integer }
+        publishedBlogPosts: { type: integer }
+        totalClicks: { type: integer }
+        pendingIndexing: { type: integer }
+        failedIndexing: { type: integer }
+        topOffers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+        recentOffers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+
+    IndexingQueueItem:
+      type: object
+      required: [id, url, type, status, provider, attempts, createdAt]
+      properties:
+        id: { type: integer }
+        url: { type: string }
+        type: { type: string }
         status:
           type: string
-      required:
-        - status
+          enum: [pending, sent, failed]
+        provider: { type: string }
+        attempts: { type: integer }
+        errorMessage: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        scheduledAt: { type: ["string", "null"], format: date-time }
+        sentAt: { type: ["string", "null"], format: date-time }
 
+    IndexingQueueResponse:
+      type: object
+      required: [items, total, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndexingQueueItem"
+        total: { type: integer }
+        page: { type: integer }
