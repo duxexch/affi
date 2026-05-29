@@ -1,0 +1,205 @@
+Proceed with the phased implementation in this exact order, prioritizing production-critical systems first.
+
+# Execution Order
+
+## Phase 1 — Authentication + Security (Highest Priority)
+
+Complete ALL auth/security work first before touching UI enhancements.
+
+Requirements:
+
+* users table
+* admin_roles
+* sessions
+* audit_logs
+* bcrypt password hashing
+* JWT access + refresh tokens
+* HTTP-only secure cookies
+* protected /admin middleware
+* login/logout endpoints
+* seeded default admin account
+* Helmet
+* compression
+* strict CORS policy
+* route-level rate limiting
+* centralized error handler
+* request logging middleware
+* CSRF protection
+
+Additionally:
+
+* add secure env validation at boot
+* fail startup if secrets are missing
+* add request ID tracing
+* add admin activity audit trail
+
+Deliverables:
+
+* migrations
+* backend services
+* middleware
+* admin login UI
+* protected admin routes
+
+Do NOT move to the next phase until admin routes are fully secured.
+
+---
+
+## Phase 2 — SEO Engine
+
+Implement a scalable SEO architecture.
+
+Requirements:
+
+* sitemap index
+* segmented sitemap shards
+* dynamic sitemap generation
+* robots.txt
+* canonical tags
+* Open Graph
+* Twitter cards
+* Product JSON-LD
+* Article JSON-LD
+* BreadcrumbList JSON-LD
+* Organization JSON-LD
+* automatic slug generation
+* slug uniqueness checks
+* SEO-safe pagination URLs
+
+Additionally:
+
+* generate SEO metadata server-side
+* ensure sitemap caching
+* add lastmod support
+* prioritize featured offers in sitemap priority scoring
+
+---
+
+## Phase 3 — Indexing & Crawl Automation
+
+Requirements:
+
+* IndexNow integration
+* indexing queue worker
+* retry handling
+* failed job recovery
+* scheduled polling worker
+* indexing status tracking
+* admin retry actions
+* queue metrics
+
+Additionally:
+
+* auto-submit newly published offers/blog posts
+* debounce duplicate indexing requests
+* structured logging for indexing failures
+
+---
+
+## Phase 4 — Search Engine
+
+Use PostgreSQL full-text search first.
+
+Requirements:
+
+* tsvector indexing
+* weighted ranking
+* typo tolerance fallback
+* search suggestions
+* trending searches
+* faceted filtering
+* sorting support
+
+Additionally:
+
+* optimize search query performance
+* add highlighted keyword snippets
+* support brand/category weighting
+
+---
+
+## Phase 5 — Affiliate Optimization
+
+Requirements:
+
+* outbound redirect service
+* UTM tracking
+* coupon system
+* offer expiration handling
+* auto-hide expired offers
+* featured scheduling
+* click analytics
+
+Additionally:
+
+* track conversion source
+* add affiliate network support
+* prevent duplicate click spam
+
+---
+
+## Phase 6 — UI/UX Improvements
+
+Requirements:
+
+* dark mode
+* skeleton loaders
+* mobile navigation improvements
+* comparison drawer
+* loading states
+* empty states
+* toast notifications
+
+Additionally:
+
+* optimize Core Web Vitals
+* improve CLS/LCP
+* lazy-load heavy admin modules
+
+---
+
+# Important Constraints
+
+Do NOT:
+
+* introduce Redis yet
+* introduce Docker yet
+* introduce external search services yet
+* introduce Firebase push yet
+
+Keep the architecture:
+
+* PostgreSQL-first
+* Express-first
+* production-safe
+* VPS-ready
+
+---
+
+# Code Quality Rules
+
+Requirements:
+
+* strict TypeScript
+* modular services
+* repository pattern
+* reusable validation
+* no duplicated business logic
+* transaction-safe DB operations
+* typed API responses
+* clean folder structure
+
+---
+
+# Final Goal
+
+Target:
+
+* Hostinger VPS deployment
+* scalable affiliate SEO platform
+* production-ready architecture
+* SEO-first implementation
+* secure admin system
+* strong indexing automation
+
+Generate real implementation code, migrations, routes, services, middleware, and frontend integrations — not placeholders.

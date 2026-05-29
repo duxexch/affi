@@ -19,6 +19,7 @@ export const offersTable = pgTable("offers", {
   clickCount: integer("click_count").notNull().default(0),
   categoryId: integer("category_id"),
   brandId: integer("brand_id"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
   lastmod: timestamp("lastmod", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

@@ -33,3 +33,11 @@ externalPort = 3000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+JWT_ACCESS_SECRET = "d4b3cfaf32797f40320706c54b118e9ffdabd4ec4d7ed6bf0dd7a39307bf6869de7cf7ea916aaab6713e555fb49be32a82e3dbc3970a503352508de7d3ead608"
+JWT_REFRESH_SECRET = "6094d10293004fb6ffb1fb2a15b803f7ef0a3094cc06d32359f37caf6569130cc6f8fdef45f7fa36a659c1d283acdf3dd60feaa894a82fcd170dfbbab0ab3be2"
+INDEX_NOW_KEY = "1083061d25cd953df1cccc4ee8676965"
+SITE_URL = "https://affiliatedeals.replit.app"

@@ -1,9 +1,17 @@
 import { Router, type IRouter } from "express";
-import { ilike, or } from "drizzle-orm";
+import { sql, and, eq } from "drizzle-orm";
 import { db, offersTable, categoriesTable, brandsTable, blogPostsTable } from "@workspace/db";
 import { SearchQueryParams } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+
+function buildTsQuery(q: string): string {
+  return q.trim().split(/\s+/).filter(Boolean).map(w => `${w}:*`).join(" & ");
+}
+
+function ftsVector(...cols: string[]): string {
+  return cols.map(c => `coalesce(${c}, '')`).join(" || ' ' || ");
+}
 
 router.get("/search", async (req, res): Promise<void> => {
   const parsed = SearchQueryParams.safeParse(req.query);
@@ -13,9 +21,12 @@ router.get("/search", async (req, res): Promise<void> => {
   }
 
   const { q, page = 1 } = parsed.data;
+  const useFullText = q.trim().length >= 3;
+  const tsQuery = useFullText ? buildTsQuery(q) : null;
   const pattern = `%${q}%`;
 
   const [offerResults, categoryResults, brandResults, blogResults] = await Promise.all([
+    // Offers: FTS or ilike, active + not expired only
     db
       .select({
         id: offersTable.id,
@@ -25,8 +36,23 @@ router.get("/search", async (req, res): Promise<void> => {
         description: offersTable.shortDescription,
       })
       .from(offersTable)
-      .where(or(ilike(offersTable.title, pattern), ilike(offersTable.shortDescription, pattern)))
+      .where(
+        and(
+          eq(offersTable.isActive, true),
+          sql`(${offersTable.expiresAt} IS NULL OR ${offersTable.expiresAt} > now())`,
+          tsQuery
+            ? sql`to_tsvector('english', coalesce(${offersTable.title},'') || ' ' || coalesce(${offersTable.shortDescription},'')) @@ to_tsquery('english', ${tsQuery})`
+            : sql`(${offersTable.title} ilike ${pattern} OR ${offersTable.shortDescription} ilike ${pattern})`
+        )
+      )
+      .orderBy(
+        tsQuery
+          ? sql`ts_rank(to_tsvector('english', coalesce(${offersTable.title},'') || ' ' || coalesce(${offersTable.shortDescription},'')), to_tsquery('english', ${tsQuery})) desc`
+          : sql`${offersTable.createdAt} desc`
+      )
       .limit(8),
+
+    // Categories
     db
       .select({
         id: categoriesTable.id,
@@ -36,8 +62,14 @@ router.get("/search", async (req, res): Promise<void> => {
         description: categoriesTable.description,
       })
       .from(categoriesTable)
-      .where(ilike(categoriesTable.name, pattern))
+      .where(
+        tsQuery
+          ? sql`to_tsvector('english', coalesce(${categoriesTable.name},'') || ' ' || coalesce(${categoriesTable.description},'')) @@ to_tsquery('english', ${tsQuery})`
+          : sql`${categoriesTable.name} ilike ${pattern}`
+      )
       .limit(4),
+
+    // Brands
     db
       .select({
         id: brandsTable.id,
@@ -47,8 +79,14 @@ router.get("/search", async (req, res): Promise<void> => {
         description: brandsTable.description,
       })
       .from(brandsTable)
-      .where(ilike(brandsTable.name, pattern))
+      .where(
+        tsQuery
+          ? sql`to_tsvector('english', coalesce(${brandsTable.name},'') || ' ' || coalesce(${brandsTable.description},'')) @@ to_tsquery('english', ${tsQuery})`
+          : sql`${brandsTable.name} ilike ${pattern}`
+      )
       .limit(4),
+
+    // Blog posts
     db
       .select({
         id: blogPostsTable.id,
@@ -58,15 +96,19 @@ router.get("/search", async (req, res): Promise<void> => {
         description: blogPostsTable.excerpt,
       })
       .from(blogPostsTable)
-      .where(or(ilike(blogPostsTable.title, pattern), ilike(blogPostsTable.excerpt, pattern)))
+      .where(
+        tsQuery
+          ? sql`to_tsvector('english', coalesce(${blogPostsTable.title},'') || ' ' || coalesce(${blogPostsTable.excerpt},'')) @@ to_tsquery('english', ${tsQuery})`
+          : sql`(${blogPostsTable.title} ilike ${pattern} OR ${blogPostsTable.excerpt} ilike ${pattern})`
+      )
       .limit(4),
   ]);
 
   const items = [
-    ...offerResults.map((r) => ({ ...r, type: "offer" as const })),
-    ...categoryResults.map((r) => ({ ...r, type: "category" as const })),
-    ...brandResults.map((r) => ({ ...r, type: "brand" as const })),
-    ...blogResults.map((r) => ({ ...r, type: "blog" as const })),
+    ...offerResults.map(r => ({ ...r, type: "offer" as const })),
+    ...categoryResults.map(r => ({ ...r, type: "category" as const })),
+    ...brandResults.map(r => ({ ...r, type: "brand" as const })),
+    ...blogResults.map(r => ({ ...r, type: "blog" as const })),
   ];
 
   res.json({ items, total: items.length, page, query: q });

@@ -1,5 +1,7 @@
 import { useListBlogPosts } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
+import { Seo } from "@/components/seo";
+import { BlogCardSkeleton } from "@/components/skeletons";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { format } from "date-fns";
@@ -9,6 +11,11 @@ export default function BlogList() {
 
   return (
     <Layout>
+      <Seo
+        title="Deal Hunter's Blog"
+        description="Tips, tricks, and buying guides to help you maximize your savings."
+        url="/blog"
+      />
       <div className="mb-8 max-w-2xl">
         <h1 className="text-4xl font-extrabold tracking-tight">Deal Hunter's Blog</h1>
         <p className="text-lg text-muted-foreground mt-4">
@@ -18,21 +25,19 @@ export default function BlogList() {
 
       {isLoading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-96 rounded-xl bg-muted animate-pulse" />
-          ))}
+          {Array.from({ length: 6 }).map((_, i) => <BlogCardSkeleton key={i} />)}
         </div>
       ) : data?.items && data.items.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.items.map(post => (
             <Link key={post.id} href={`/blog/${post.slug}`} className="group block h-full">
-              <Card className="h-full flex flex-col overflow-hidden hover-elevate transition-all hover:border-primary/50">
+              <Card className="h-full flex flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
                 {post.imageUrl && (
                   <CardHeader className="p-0">
                     <div className="aspect-[16/9] overflow-hidden bg-muted">
-                      <img 
-                        src={post.imageUrl} 
-                        alt={post.title} 
+                      <img
+                        src={post.imageUrl}
+                        alt={post.title}
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
                     </div>
@@ -46,9 +51,7 @@ export default function BlogList() {
                     {post.title}
                   </h2>
                   {post.excerpt && (
-                    <p className="text-muted-foreground line-clamp-3">
-                      {post.excerpt}
-                    </p>
+                    <p className="text-muted-foreground line-clamp-3">{post.excerpt}</p>
                   )}
                 </CardContent>
                 <CardFooter className="p-6 pt-0 mt-auto">

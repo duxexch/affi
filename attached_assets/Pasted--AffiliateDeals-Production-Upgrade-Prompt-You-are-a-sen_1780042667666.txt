@@ -1,0 +1,306 @@
+# AffiliateDeals — Production Upgrade Prompt
+
+You are a senior full-stack architect and product engineer.
+
+Continue developing the existing AffiliateDeals platform into a production-grade affiliate marketplace with strong SEO, scalability, indexing automation, and admin tooling.
+
+Current stack:
+
+* Frontend: React/TanStack Start
+* Backend: Express.js + TypeScript
+* Database: PostgreSQL
+* Validation: Zod + OpenAPI
+* Existing entities:
+
+  * offers
+  * categories
+  * brands
+  * blog_posts
+  * indexing_queue
+
+The platform already includes:
+
+* Public offers pages
+* Search
+* Blog
+* Admin dashboard
+* CRUD operations
+* Click tracking
+* PostgreSQL integration
+
+Your task is to extend the system professionally while preserving the current architecture.
+
+# PRIORITIES
+
+## P1 — Authentication & Security
+
+Implement secure admin authentication.
+
+Requirements:
+
+* Admin login page
+* JWT auth with refresh tokens
+* bcrypt password hashing
+* HTTP-only secure cookies
+* Role-based permissions
+* Middleware protection for /admin and admin APIs
+* Rate limiting
+* Helmet security middleware
+* CSRF protection
+* Secure environment variable handling
+* Audit logging for admin actions
+
+Create:
+
+* users table
+* admin_roles table
+* sessions table
+* audit_logs table
+
+Add:
+
+* login
+* logout
+* refresh token
+* password reset flow
+
+---
+
+## P2 — Advanced SEO System
+
+Build a complete SEO engine.
+
+Requirements:
+
+* Dynamic sitemap.xml
+* Sitemap index support
+* Sitemap chunking/sharding
+* robots.txt generation
+* Canonical URL handling
+* Meta tags per page
+* Open Graph support
+* Twitter cards
+* Dynamic JSON-LD generators
+
+Generate JSON-LD for:
+
+* Product
+* Article
+* BreadcrumbList
+* Organization
+* FAQPage
+
+Add automatic slug generation and slug uniqueness validation.
+
+---
+
+## P3 — Indexing Automation
+
+Build a full indexing pipeline.
+
+Requirements:
+
+* IndexNow integration
+* Google indexing queue support
+* Retry queue system
+* Failed job recovery
+* Batch submission
+* Cron workers
+* Queue status tracking
+* Admin retry actions
+* Queue metrics dashboard
+
+Create:
+
+* indexing_jobs table
+* indexing_failures table
+
+---
+
+## P4 — Performance & Scaling
+
+Optimize for production traffic.
+
+Requirements:
+
+* Redis caching layer
+* API response caching
+* Query optimization
+* Pagination optimization
+* Lazy loading
+* Image optimization
+* CDN-ready asset handling
+* Compression middleware
+* Background workers
+
+Implement:
+
+* cache invalidation
+* stale-while-revalidate strategy
+
+---
+
+## P5 — Affiliate Optimization
+
+Improve affiliate conversion tracking.
+
+Requirements:
+
+* Affiliate click analytics
+* UTM tracking
+* Outbound redirect service
+* Conversion tracking hooks
+* Offer expiration handling
+* Auto-hide expired offers
+* Featured deal scheduling
+* Coupon support
+* Cashback support
+
+Create:
+
+* clicks table
+* coupons table
+* affiliate_networks table
+
+---
+
+## P6 — Search Engine
+
+Build advanced search.
+
+Requirements:
+
+* Full-text search
+* Search suggestions
+* Trending searches
+* Typo tolerance
+* Filters
+* Sorting
+* Faceted search
+
+Prefer:
+
+* Meilisearch
+  or
+* Typesense
+
+---
+
+## P7 — Notifications
+
+Implement notification systems.
+
+Requirements:
+
+* Web push notifications
+* Email notifications
+* Offer alerts
+* Price drop alerts
+* Category subscriptions
+* Browser notification opt-in
+
+Support:
+
+* Firebase Cloud Messaging (FCM)
+
+---
+
+## P8 — Analytics Dashboard
+
+Create advanced analytics.
+
+Requirements:
+
+* Revenue estimation
+* Click-through rate
+* Top performing offers
+* Traffic sources
+* Search analytics
+* Device analytics
+* Country analytics
+* Daily/weekly/monthly charts
+
+---
+
+## P9 — Deployment & DevOps
+
+Prepare for production deployment.
+
+Requirements:
+
+* Docker support
+* docker-compose
+* PM2 ecosystem config
+* CI/CD pipeline
+* Environment validation
+* Health check endpoints
+* Structured logging
+* Error monitoring
+* Backup strategy
+
+Target:
+
+* Hostinger VPS deployment
+* Nginx reverse proxy
+* SSL support
+
+---
+
+# CODE QUALITY RULES
+
+Requirements:
+
+* Strict TypeScript
+* Modular architecture
+* Repository/service/controller separation
+* Clean folder structure
+* Reusable components
+* No duplicated logic
+* Proper error handling
+* Typed API responses
+* Database migrations
+* Seed scripts
+* Transaction safety
+
+---
+
+# UI/UX REQUIREMENTS
+
+Maintain the existing orange/amber affiliate-deals aesthetic.
+
+Improve:
+
+* Mobile responsiveness
+* Accessibility
+* Loading states
+* Skeleton loaders
+* Empty states
+* Toast notifications
+* Table performance
+* Admin UX
+
+Add:
+
+* Dark mode
+* Advanced filters
+* Saved filters
+* Offer comparison UI
+
+---
+
+# DELIVERABLES
+
+For every phase:
+
+1. Database schema changes
+2. Migrations
+3. API routes
+4. Backend services
+5. Frontend pages/components
+6. Validation schemas
+7. Admin integration
+8. Production-ready implementation
+
+Do not provide mockups only.
+
+Generate real implementation code with scalable architecture and production-grade practices.

@@ -1,20 +1,27 @@
-import { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Menu, Zap, Tag, Hexagon, FileText } from "lucide-react";
+import { Search, Menu, Zap, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [, setLocation] = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const q = formData.get("q") as string;
-    if (q) {
-      setLocation(`/search?q=${encodeURIComponent(q)}`);
-    }
+    const q = (new FormData(e.currentTarget).get("q") as string)?.trim();
+    if (q) { setLocation(`/search?q=${encodeURIComponent(q)}`); setMobileOpen(false); }
   };
+
+  const navLinks = [
+    { href: "/offers", label: "Offers" },
+    { href: "/categories", label: "Categories" },
+    { href: "/brands", label: "Brands" },
+    { href: "/blog", label: "Blog" },
+  ];
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
@@ -26,36 +33,51 @@ export function Layout({ children }: { children: ReactNode }) {
               <span>AffiliateDeals</span>
             </Link>
             <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-              <Link href="/offers" className="transition-colors hover:text-primary">Offers</Link>
-              <Link href="/categories" className="transition-colors hover:text-primary">Categories</Link>
-              <Link href="/brands" className="transition-colors hover:text-primary">Brands</Link>
-              <Link href="/blog" className="transition-colors hover:text-primary">Blog</Link>
+              {navLinks.map(l => (
+                <Link key={l.href} href={l.href} className="transition-colors hover:text-primary">{l.label}</Link>
+              ))}
             </nav>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <form onSubmit={handleSearch} className="hidden md:flex relative w-full max-w-sm items-center">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                name="q"
-                placeholder="Search deals..."
-                className="w-full bg-background shadow-none appearance-none pl-8 md:w-[200px] lg:w-[300px]"
-              />
+              <Input type="search" name="q" placeholder="Search deals..." className="pl-8 w-[200px] lg:w-[300px]" />
             </form>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
-            </Button>
+            <ThemeToggle />
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72">
+                <div className="flex flex-col gap-6 pt-6">
+                  <form onSubmit={handleSearch} className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input type="search" name="q" placeholder="Search deals..." className="pl-8 w-full" />
+                  </form>
+                  <nav className="flex flex-col gap-2">
+                    {navLinks.map(l => (
+                      <Link key={l.href} href={l.href} onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2.5 rounded-md hover:bg-muted font-medium text-sm">
+                        {l.label}
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
       <footer className="border-t py-8 bg-muted/40">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} AffiliateDeals. All rights reserved.</p>
           <div className="mt-4 flex justify-center gap-4">
-            <Link href="/admin" className="hover:text-primary">Admin Access</Link>
+            <Link href="/admin" className="hover:text-primary">Admin</Link>
+            <a href="/api/sitemap.xml" target="_blank" className="hover:text-primary">Sitemap</a>
+            <a href="/api/robots.txt" target="_blank" className="hover:text-primary">Robots</a>
           </div>
         </div>
       </footer>

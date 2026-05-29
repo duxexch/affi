@@ -1,11 +1,14 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, ilike, and, sql } from "drizzle-orm";
+import { eq, desc, ilike, and, sql, isNull, or, gt } from "drizzle-orm";
 import { db, offersTable, categoriesTable, brandsTable } from "@workspace/db";
+import { queueUrlForIndexing } from "../services/indexNow.js";
 import {
   GetOfferParams,
   TrackOfferClickParams,
   ListOffersQueryParams,
 } from "@workspace/api-zod";
+
+const SITE_URL = process.env.SITE_URL ?? "https://affiliatedeals.replit.app";
 
 const router: IRouter = Router();
 
@@ -49,11 +52,21 @@ router.get("/offers", async (req, res): Promise<void> => {
   const { page = 1, limit = 20, categorySlug, brandSlug, featured, q } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const conditions = [eq(offersTable.isActive, true)];
+  const conditions = [
+    eq(offersTable.isActive, true),
+    sql`(${offersTable.expiresAt} IS NULL OR ${offersTable.expiresAt} > now())`,
+  ];
   if (categorySlug) conditions.push(eq(categoriesTable.slug, categorySlug));
   if (brandSlug) conditions.push(eq(brandsTable.slug, brandSlug));
   if (featured) conditions.push(eq(offersTable.isFeatured, true));
-  if (q) conditions.push(ilike(offersTable.title, `%${q}%`));
+  if (q) {
+    if (q.trim().length >= 3) {
+      const tsQuery = q.trim().split(/\s+/).filter(Boolean).map(w => `${w}:*`).join(" & ");
+      conditions.push(sql`to_tsvector('english', coalesce(${offersTable.title}, '') || ' ' || coalesce(${offersTable.shortDescription}, '')) @@ to_tsquery('english', ${tsQuery})`);
+    } else {
+      conditions.push(ilike(offersTable.title, `%${q}%`));
+    }
+  }
 
   const where = and(...conditions);
 

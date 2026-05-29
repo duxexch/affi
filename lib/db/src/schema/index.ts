@@ -3,3 +3,8 @@ export * from "./brands";
 export * from "./offers";
 export * from "./blog_posts";
 export * from "./indexing_queue";
+export * from "./users";
+export * from "./sessions";
+export * from "./audit_logs";
+export * from "./coupons";
+export * from "./clicks";
