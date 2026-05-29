@@ -171,6 +171,8 @@ function setGoogleTranslateLanguage(targetLang: GoogleLangCode): void {
         if (!select) return false;
 
         select.value = targetLang;
+        // Some builds listen to different event types.
+        select.dispatchEvent(new Event("input", { bubbles: true }));
         select.dispatchEvent(new Event("change", { bubbles: true }));
         return true;
     };
