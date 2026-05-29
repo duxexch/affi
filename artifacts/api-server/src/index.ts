@@ -1,9 +1,8 @@
-import app from "./app.js";
 import { logger } from "./lib/logger.js";
+import { validateEnv } from "./lib/env.js";
 import { startIndexingWorker } from "./services/indexNow.js";
 
 process.on("uncaughtException", (err) => {
-  // Hostinger runtime logs might be empty; this also writes to stderr
   console.error("uncaughtException", err);
   logger.error({ err }, "uncaughtException");
   process.exit(1);
@@ -13,6 +12,12 @@ process.on("unhandledRejection", (reason) => {
   console.error("unhandledRejection", reason);
   logger.error({ reason }, "unhandledRejection");
 });
+
+// IMPORTANT:
+// validateEnv MUST run before importing modules that read JWT secrets at module-load time.
+validateEnv();
+
+const { default: app } = await import("./app.js");
 
 const rawPort = process.env["WEBSITES_PORT"] ?? process.env["PORT"] ?? "3000";
 const port = Number(rawPort);
