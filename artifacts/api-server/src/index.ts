@@ -36,7 +36,7 @@ if (Number.isNaN(port) || port <= 0) {
   logger.warn({ rawPort }, "Invalid PORT value; falling back to 3000");
 }
 
-const safePort = Number.isNaN(port) || port <= 0 ? 3000 : port;
+const safePort = Number.isNaN(port) || port <= 0 ? 8080 : port;
 
 import("./app.js")
   .then(({ default: app }) => {
