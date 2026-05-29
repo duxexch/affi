@@ -11,11 +11,11 @@ if (Number.isNaN(port) || port <= 0) {
 
 const safePort = Number.isNaN(port) || port <= 0 ? 3000 : port;
 
-app.listen(port, (err) => {
+app.listen(safePort, (err) => {
   if (err) {
-    logger.error({ err }, "Error listening on port");
+    logger.error({ err, safePort }, "Error listening on port");
     process.exit(1);
   }
-  logger.info({ port }, "Server listening");
+  logger.info({ port: safePort }, "Server listening");
   startIndexingWorker();
 });
