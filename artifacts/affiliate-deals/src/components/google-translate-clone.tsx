@@ -66,12 +66,22 @@ export function GoogleTranslateClone({
       // Clone and trigger translation.
       syncClone(sourceEl, cloneEl);
 
-      // Let DOM settle then request translation.
-      const t = window.setTimeout(() => {
-      applyGoogleTranslateLanguage(lang);
-    }, 50);
+        // Let DOM settle then request translation (multiple retries; async routes like /categories).
+        const t1 = window.setTimeout(() => {
+            applyGoogleTranslateLanguage(lang);
+        }, 50);
+        const t2 = window.setTimeout(() => {
+            applyGoogleTranslateLanguage(lang);
+        }, 1000);
+        const t3 = window.setTimeout(() => {
+            applyGoogleTranslateLanguage(lang);
+        }, 2500);
 
-      return () => window.clearTimeout(t);
+        return () => {
+            window.clearTimeout(t1);
+            window.clearTimeout(t2);
+            window.clearTimeout(t3);
+        };
   }, [isTranslated, lang]);
 
     useEffect(() => {
