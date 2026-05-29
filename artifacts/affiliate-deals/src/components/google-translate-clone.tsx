@@ -16,7 +16,9 @@ function getLangFromScope(scope: TranslationScope): GoogleLangCode {
 
 function syncClone(sourceEl: HTMLDivElement | null, cloneEl: HTMLDivElement | null): void {
     if (!sourceEl || !cloneEl) return;
-    // Clone current rendered HTML so Google only mutates the clone.
+
+    // Clear first so Google Translate re-reads fresh DOM.
+    cloneEl.innerHTML = "";
     cloneEl.innerHTML = sourceEl.innerHTML;
 }
 
@@ -33,6 +35,8 @@ export function GoogleTranslateClone({
     const [lang, setLang] = useState<GoogleLangCode>(() => getLangFromScope(scope));
     const isTranslated = useMemo(() => lang !== "en", [lang]);
 
+    const widgetContainerId = useMemo(() => getGoogleTranslateWidgetContainerId(), []);
+
     useEffect(() => {
         ensureGoogleTranslateWidgetInjected();
     }, []);
@@ -46,7 +50,7 @@ export function GoogleTranslateClone({
     useEffect(() => {
         const sourceEl = sourceRef.current;
         const cloneEl = cloneRef.current;
-      if (!sourceEl || !cloneEl) return;
+        if (!sourceEl || !cloneEl) return;
 
       if (!isTranslated) {
           sourceEl.style.display = "";
@@ -55,64 +59,56 @@ export function GoogleTranslateClone({
           return;
       }
 
-      // Snapshot React DOM -> clone, THEN apply translation.
-      syncClone(sourceEl, cloneEl);
-
-      // Hide React-managed DOM while Google translates.
+      // Make sure clone is visible before triggering translate.
       sourceEl.style.display = "none";
       cloneEl.style.display = "";
 
-      // Let DOM settle before applying language.
-      window.setTimeout(() => {
+      // Clone and trigger translation.
+      syncClone(sourceEl, cloneEl);
+
+      // Let DOM settle then request translation.
+      const t = window.setTimeout(() => {
       applyGoogleTranslateLanguage(lang);
-    }, 0);
+    }, 50);
+
+      return () => window.clearTimeout(t);
   }, [isTranslated, lang]);
 
-    // If React content changes while translation is active (async routes),
-    // re-clone and re-apply language.
     useEffect(() => {
-        if (!isTranslated) return;
+      const sourceEl = sourceRef.current;
+      const cloneEl = cloneRef.current;
+      if (!isTranslated || !sourceEl || !cloneEl) return;
 
-        const sourceEl = sourceRef.current;
-        const cloneEl = cloneRef.current;
-        if (!sourceEl || !cloneEl) return;
+      let timer: number | undefined;
 
-        let timer: number | undefined;
+      const observer = new MutationObserver(() => {
+          if (timer) window.clearTimeout(timer);
+          timer = window.setTimeout(() => {
+          // Re-sync DOM for async routes (like /categories)
+          syncClone(sourceEl, cloneEl);
+          applyGoogleTranslateLanguage(lang);
+      }, 250);
+    });
 
-        const observer = new MutationObserver(() => {
-            if (timer) window.clearTimeout(timer);
-            timer = window.setTimeout(() => {
-                syncClone(sourceEl, cloneEl);
-                applyGoogleTranslateLanguage(lang);
-            }, 200);
-        });
+      observer.observe(sourceEl, {
+          subtree: true,
+          childList: true,
+          characterData: true,
+      });
 
-        observer.observe(sourceEl, {
-            subtree: true,
-            childList: true,
-            characterData: true,
-        });
-
-        return () => {
-            observer.disconnect();
-            if (timer) window.clearTimeout(timer);
-        };
+      return () => {
+          observer.disconnect();
+          if (timer) window.clearTimeout(timer);
+      };
   }, [isTranslated, lang]);
-
-    const widgetContainerId = useMemo(() => getGoogleTranslateWidgetContainerId(), []);
 
     return (
         <>
             {/* Google translate mount point */}
             <div id={widgetContainerId} className="hidden" />
 
-          {/* React-managed DOM: block Google translation */}
-          <div
-              ref={sourceRef}
-              translate="no"
-              aria-hidden={isTranslated}
-              className="notranslate"
-          >
+          {/* React-managed DOM: skip translation */}
+          <div ref={sourceRef} translate="no" aria-hidden={isTranslated} className="notranslate">
               {children}
           </div>
 
