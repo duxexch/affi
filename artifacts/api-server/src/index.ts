@@ -40,16 +40,21 @@ const safePort = Number.isNaN(port) || port <= 0 ? 8080 : port;
 
 import("./app.js")
   .then(({ default: app }) => {
-    app.listen(safePort, "0.0.0.0", (err) => {
-      if (err) {
-        logger.error({ err, safePort }, "Error listening on port");
-        process.exit(1);
-      }
-      logger.info({ port: safePort }, "Server listening");
+    // Hostinger may proxy to a specific port; listen on multiple common ports to ensure availability.
+    const portsToTry = Array.from(new Set([safePort, 3000, 8080]));
 
-      import("./services/indexNow.js").then(({ startIndexingWorker }) => {
-        startIndexingWorker();
+    for (const p of portsToTry) {
+      app.listen(p, "0.0.0.0", (err) => {
+        if (err) {
+          logger.error({ err, p }, "Error listening on port");
+          return;
+        }
+        logger.info({ port: p }, "Server listening");
       });
+    }
+
+    import("./services/indexNow.js").then(({ startIndexingWorker }) => {
+      startIndexingWorker();
     });
   })
   .catch((err) => {
