@@ -104,11 +104,43 @@ router.get("/search", async (req, res): Promise<void> => {
       .limit(4),
   ]);
 
+  type OfferResult = {
+    id: number;
+    title: string;
+    slug: string;
+    imageUrl: string | null;
+    description: string | null;
+  };
+
+  type CategoryResult = {
+    id: number;
+    title: string;
+    slug: string;
+    imageUrl: string | null;
+    description: string | null;
+  };
+
+  type BrandResult = {
+    id: number;
+    title: string;
+    slug: string;
+    imageUrl: string | null;
+    description: string | null;
+  };
+
+  type BlogResult = {
+    id: number;
+    title: string;
+    slug: string;
+    imageUrl: string | null;
+    description: string | null;
+  };
+
   const items = [
-    ...offerResults.map(r => ({ ...r, type: "offer" as const })),
-    ...categoryResults.map(r => ({ ...r, type: "category" as const })),
-    ...brandResults.map(r => ({ ...r, type: "brand" as const })),
-    ...blogResults.map(r => ({ ...r, type: "blog" as const })),
+    ...offerResults.map((r: OfferResult) => ({ ...r, type: "offer" as const })),
+    ...categoryResults.map((r: CategoryResult) => ({ ...r, type: "category" as const })),
+    ...brandResults.map((r: BrandResult) => ({ ...r, type: "brand" as const })),
+    ...blogResults.map((r: BlogResult) => ({ ...r, type: "blog" as const })),
   ];
 
   res.json({ items, total: items.length, page, query: q });

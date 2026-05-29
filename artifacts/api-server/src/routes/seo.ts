@@ -71,7 +71,9 @@ router.get("/sitemap-offers.xml", async (_req, res): Promise<void> => {
     )
     .orderBy(desc(offersTable.isFeatured), desc(offersTable.lastmod));
 
-  const urls = offers.map((o) =>
+  type OfferRow = { slug: string; lastmod: Date; isFeatured: boolean };
+
+  const urls = offers.map((o: OfferRow) =>
     sitemapUrl(`/offers/${o.slug}`, o.lastmod, o.isFeatured ? 0.9 : 0.7, "weekly")
   ).join("\n");
 
@@ -87,7 +89,9 @@ router.get("/sitemap-categories.xml", async (_req, res): Promise<void> => {
     .from(categoriesTable)
     .where(eq(categoriesTable.isActive, true));
 
-  const urls = cats.map((c) => sitemapUrl(`/categories/${c.slug}`, c.createdAt, 0.8, "weekly")).join("\n");
+  type CategoryRow = { slug: string; createdAt: Date };
+
+  const urls = cats.map((c: CategoryRow) => sitemapUrl(`/categories/${c.slug}`, c.createdAt, 0.8, "weekly")).join("\n");
   res.setHeader("Content-Type", "application/xml");
   res.setHeader("Cache-Control", "public, max-age=3600");
   res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
@@ -100,7 +104,9 @@ router.get("/sitemap-brands.xml", async (_req, res): Promise<void> => {
     .from(brandsTable)
     .where(eq(brandsTable.isActive, true));
 
-  const urls = brands.map((b) => sitemapUrl(`/brands/${b.slug}`, b.createdAt, 0.7, "weekly")).join("\n");
+  type BrandRow = { slug: string; createdAt: Date };
+
+  const urls = brands.map((b: BrandRow) => sitemapUrl(`/brands/${b.slug}`, b.createdAt, 0.7, "weekly")).join("\n");
   res.setHeader("Content-Type", "application/xml");
   res.setHeader("Cache-Control", "public, max-age=3600");
   res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
@@ -114,7 +120,9 @@ router.get("/sitemap-blog.xml", async (_req, res): Promise<void> => {
     .where(eq(blogPostsTable.isPublished, true))
     .orderBy(desc(blogPostsTable.updatedAt));
 
-  const urls = posts.map((p) => sitemapUrl(`/blog/${p.slug}`, p.updatedAt, 0.7, "monthly")).join("\n");
+  type BlogPostRow = { slug: string; updatedAt: Date };
+
+  const urls = posts.map((p: BlogPostRow) => sitemapUrl(`/blog/${p.slug}`, p.updatedAt, 0.7, "monthly")).join("\n");
   res.setHeader("Content-Type", "application/xml");
   res.setHeader("Cache-Control", "public, max-age=3600");
   res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);

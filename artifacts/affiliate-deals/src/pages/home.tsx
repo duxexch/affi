@@ -75,7 +75,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {Array.from({ length: 6 }).map((_, i) => <CategoryCardSkeleton key={i} />)}
           </div>
-        ) : categories && categories.length > 0 ? (
+        ) : Array.isArray(categories) && categories.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {categories.slice(0, 6).map(category => <CategoryCard key={category.id} category={category} />)}
           </div>
@@ -98,7 +98,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {Array.from({ length: 5 }).map((_, i) => <BrandCardSkeleton key={i} />)}
           </div>
-        ) : brands && brands.length > 0 ? (
+        ) : Array.isArray(brands) && brands.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {brands.slice(0, 5).map(brand => <BrandCard key={brand.id} brand={brand} />)}
           </div>

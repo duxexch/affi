@@ -49,9 +49,9 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://translate.google.com", "https://www.google.com"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        connectSrc: ["'self'"],
+        connectSrc: ["'self'", "https://translate.google.com", "https://www.google.com"],
       },
     },
     crossOriginEmbedderPolicy: false,

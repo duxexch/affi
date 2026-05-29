@@ -50,7 +50,7 @@ router.get("/offers/:offerId/coupons", async (req, res): Promise<void> => {
     .select({ id: couponsTable.id, code: couponsTable.code, description: couponsTable.description, type: couponsTable.type, value: couponsTable.value, expiresAt: couponsTable.expiresAt })
     .from(couponsTable)
     .where(eq(couponsTable.offerId, offerId));
-  res.json(coupons.filter(c => !c.expiresAt || c.expiresAt > now));
+  res.json(coupons.filter((c: { expiresAt: Date | null }) => !c.expiresAt || c.expiresAt > now));
 });
 
 export default router;

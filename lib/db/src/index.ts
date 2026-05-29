@@ -46,3 +46,8 @@ export const db = drizzle(pool, { schema: drizzleSchema, mode: "default" as cons
 
 export { usersTable } from "./schema/users";
 export { sessionsTable } from "./schema/sessions";
+
+// Re-export remaining schema tables for TypeScript.
+// We intentionally do NOT include them in `drizzleSchema` (MySQL runtime/auth compatibility),
+// but exporting fixes `api-server` compile-time imports.
+export * from "./schema";

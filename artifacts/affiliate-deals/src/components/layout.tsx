@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [, setLocation] = useLocation();
@@ -43,6 +44,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input type="search" name="q" placeholder="Search deals..." className="pl-8 w-[200px] lg:w-[300px]" />
             </form>
+            <LanguageSwitcher scope="user" />
             <ThemeToggle />
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>

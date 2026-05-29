@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Zap, AlertCircle } from "lucide-react";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function AdminLogin() {
   const { login } = useAuth();
@@ -32,6 +33,9 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher scope="admin" />
+      </div>
       <div className="w-full max-w-md space-y-6">
         <div className="flex items-center justify-center gap-3">
           <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-primary">

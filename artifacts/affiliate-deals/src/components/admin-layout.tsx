@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation as useWouter } from "wouter";
@@ -83,11 +84,13 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </SheetContent>
           </Sheet>
           <span className="font-bold text-primary">Admin Console</span>
+          <LanguageSwitcher scope="admin" />
           <ThemeToggle />
         </header>
 
         {/* Desktop header bar */}
         <header className="hidden md:flex h-14 items-center justify-end px-8 border-b bg-background gap-3">
+          <LanguageSwitcher scope="admin" />
           <ThemeToggle />
         </header>
 
