@@ -7,5 +7,23 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     "Unhandled error",
   );
   if (res.headersSent) return;
-  res.status(500).json({ error: "Internal server error", message: err.message });
+
+  const anyErr = err as unknown as {
+    code?: unknown;
+    errno?: unknown;
+    sqlState?: unknown;
+    sqlMessage?: unknown;
+    cause?: { message?: unknown; sqlMessage?: unknown; code?: unknown };
+  };
+
+  res.status(500).json({
+    error: "Internal server error",
+    message: err.message,
+    code: anyErr.code,
+    sqlMessage: anyErr.sqlMessage,
+    sqlState: anyErr.sqlState,
+    causeMessage: anyErr.cause?.message,
+    causeSqlMessage: anyErr.cause?.sqlMessage,
+    causeCode: anyErr.cause?.code,
+  });
 }
