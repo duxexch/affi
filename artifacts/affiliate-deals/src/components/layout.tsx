@@ -18,11 +18,25 @@ export function Layout({ children }: { children: ReactNode }) {
     if (q) { setLocation(`/search?q=${encodeURIComponent(q)}`); setMobileOpen(false); }
   };
 
+  const seoLinks = [
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+    { href: "/privacy-policy", label: "Privacy Policy" },
+    { href: "/terms-of-service", label: "Terms" },
+    { href: "/faq", label: "FAQ" },
+    { href: "/how-it-works", label: "How It Works" },
+    { href: "/refund-policy", label: "Refund Policy" },
+    { href: "/advertising", label: "Advertising" },
+    { href: "/support", label: "Support" },
+    { href: "/careers", label: "Careers" },
+  ];
+
   const navLinks = [
     { href: "/offers", label: "Offers" },
     { href: "/categories", label: "Categories" },
     { href: "/brands", label: "Brands" },
     { href: "/blog", label: "Blog" },
+    ...seoLinks,
   ];
 
   return (
@@ -79,6 +93,14 @@ export function Layout({ children }: { children: ReactNode }) {
       <footer className="border-t py-8 bg-muted/40">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} AffiliateDeals. All rights reserved.</p>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
+            {seoLinks.map((l) => (
+              <Link key={l.href} href={l.href} className="hover:text-primary">
+                {l.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </footer>
     </div>
