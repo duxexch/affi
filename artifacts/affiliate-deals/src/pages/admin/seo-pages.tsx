@@ -59,6 +59,22 @@ export default function AdminSeoPages() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const DefaultItems: SeoPageRow[] = useMemo(
+    () =>
+      slugOptions.map((slug) => ({
+        id: 0,
+        slug,
+        titleAr: "",
+        titleEn: "",
+        excerptAr: "",
+        excerptEn: "",
+        contentAr: "",
+        contentEn: "",
+        isPublished: true,
+      })),
+    [],
+  );
+
   const [items, setItems] = useState<SeoPageRow[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -97,6 +113,7 @@ export default function AdminSeoPages() {
         description: e instanceof Error ? e.message : "Failed to load SEO pages",
         variant: "destructive",
       });
+      setItems(DefaultItems);
     } finally {
       setLoading(false);
     }
