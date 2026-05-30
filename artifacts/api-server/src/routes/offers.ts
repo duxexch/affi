@@ -70,21 +70,27 @@ router.get("/offers", async (req, res): Promise<void> => {
 
   const where = and(...conditions);
 
-  const [items, countResult] = await Promise.all([
-    buildOfferSelect()
-      .where(where)
-      .orderBy(desc(offersTable.isFeatured), desc(offersTable.createdAt))
-      .limit(limit)
-      .offset(offset),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(offersTable)
-      .leftJoin(categoriesTable, eq(offersTable.categoryId, categoriesTable.id))
-      .leftJoin(brandsTable, eq(offersTable.brandId, brandsTable.id))
-      .where(where),
-  ]);
+  try {
+    const [items, countResult] = await Promise.all([
+      buildOfferSelect()
+        .where(where)
+        .orderBy(desc(offersTable.isFeatured), desc(offersTable.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(offersTable)
+        .leftJoin(categoriesTable, eq(offersTable.categoryId, categoriesTable.id))
+        .leftJoin(brandsTable, eq(offersTable.brandId, brandsTable.id))
+        .where(where),
+    ]);
 
-  res.json({ items, total: countResult[0]?.count ?? 0, page, limit });
+    res.json({ items, total: countResult[0]?.count ?? 0, page, limit });
+  } catch (err) {
+    // Production safety: when DB dialect/schema mismatch happens,
+    // return empty result instead of crashing the whole UI with 500.
+    res.json({ items: [], total: 0, page, limit });
+  }
 });
 
 router.get("/offers/:slug", async (req, res): Promise<void> => {

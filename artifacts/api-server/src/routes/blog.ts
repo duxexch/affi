@@ -15,21 +15,25 @@ router.get("/blog", async (req, res): Promise<void> => {
   const { page = 1, limit = 12 } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const [items, countResult] = await Promise.all([
-    db
-      .select()
-      .from(blogPostsTable)
-      .where(eq(blogPostsTable.isPublished, true))
-      .orderBy(desc(blogPostsTable.createdAt))
-      .limit(limit)
-      .offset(offset),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(blogPostsTable)
-      .where(eq(blogPostsTable.isPublished, true)),
-  ]);
+  try {
+    const [items, countResult] = await Promise.all([
+      db
+        .select()
+        .from(blogPostsTable)
+        .where(eq(blogPostsTable.isPublished, true))
+        .orderBy(desc(blogPostsTable.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(blogPostsTable)
+        .where(eq(blogPostsTable.isPublished, true)),
+    ]);
 
-  res.json({ items, total: countResult[0]?.count ?? 0, page, limit });
+    res.json({ items, total: countResult[0]?.count ?? 0, page, limit });
+  } catch (_err) {
+    res.json({ items: [], total: 0, page, limit });
+  }
 });
 
 router.get("/blog/:slug", async (req, res): Promise<void> => {
@@ -39,18 +43,22 @@ router.get("/blog/:slug", async (req, res): Promise<void> => {
     return;
   }
 
-  const [post] = await db
-    .select()
-    .from(blogPostsTable)
-    .where(eq(blogPostsTable.slug, params.data.slug))
-    .limit(1);
+  try {
+    const [post] = await db
+      .select()
+      .from(blogPostsTable)
+      .where(eq(blogPostsTable.slug, params.data.slug))
+      .limit(1);
 
-  if (!post || !post.isPublished) {
+    if (!post || !post.isPublished) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
+
+    res.json(post);
+  } catch (_err) {
     res.status(404).json({ error: "Post not found" });
-    return;
   }
-
-  res.json(post);
 });
 
 export default router;

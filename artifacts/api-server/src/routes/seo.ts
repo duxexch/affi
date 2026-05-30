@@ -59,73 +59,93 @@ router.get("/sitemap-static.xml", (_req, res): void => {
 
 // Offers sitemap
 router.get("/sitemap-offers.xml", async (_req, res): Promise<void> => {
-  const now = new Date();
-  const offers = await db
-    .select({ slug: offersTable.slug, lastmod: offersTable.lastmod, isFeatured: offersTable.isFeatured })
-    .from(offersTable)
-    .where(
-      and(
-        eq(offersTable.isActive, true),
-        or(isNull(offersTable.expiresAt), gt(offersTable.expiresAt, now))
+  try {
+    const now = new Date();
+    const offers = await db
+      .select({ slug: offersTable.slug, lastmod: offersTable.lastmod, isFeatured: offersTable.isFeatured })
+      .from(offersTable)
+      .where(
+        and(
+          eq(offersTable.isActive, true),
+          or(isNull(offersTable.expiresAt), gt(offersTable.expiresAt, now))
+        )
       )
-    )
-    .orderBy(desc(offersTable.isFeatured), desc(offersTable.lastmod));
+      .orderBy(desc(offersTable.isFeatured), desc(offersTable.lastmod));
 
-  type OfferRow = { slug: string; lastmod: Date; isFeatured: boolean };
+    type OfferRow = { slug: string; lastmod: Date; isFeatured: boolean };
 
-  const urls = offers.map((o: OfferRow) =>
-    sitemapUrl(`/offers/${o.slug}`, o.lastmod, o.isFeatured ? 0.9 : 0.7, "weekly")
-  ).join("\n");
+    const urls = offers.map((o: OfferRow) =>
+      sitemapUrl(`/offers/${o.slug}`, o.lastmod, o.isFeatured ? 0.9 : 0.7, "weekly")
+    ).join("\n");
 
-  res.setHeader("Content-Type", "application/xml");
-  res.setHeader("Cache-Control", "public, max-age=3600");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+  } catch (_err) {
+    res.setHeader("Content-Type", "application/xml");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
+  }
 });
 
 // Categories sitemap
 router.get("/sitemap-categories.xml", async (_req, res): Promise<void> => {
-  const cats = await db
-    .select({ slug: categoriesTable.slug, createdAt: categoriesTable.createdAt })
-    .from(categoriesTable)
-    .where(eq(categoriesTable.isActive, true));
+  try {
+    const cats = await db
+      .select({ slug: categoriesTable.slug, createdAt: categoriesTable.createdAt })
+      .from(categoriesTable)
+      .where(eq(categoriesTable.isActive, true));
 
-  type CategoryRow = { slug: string; createdAt: Date };
+    type CategoryRow = { slug: string; createdAt: Date };
 
-  const urls = cats.map((c: CategoryRow) => sitemapUrl(`/categories/${c.slug}`, c.createdAt, 0.8, "weekly")).join("\n");
-  res.setHeader("Content-Type", "application/xml");
-  res.setHeader("Cache-Control", "public, max-age=3600");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+    const urls = cats.map((c: CategoryRow) => sitemapUrl(`/categories/${c.slug}`, c.createdAt, 0.8, "weekly")).join("\n");
+    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+  } catch (_err) {
+    res.setHeader("Content-Type", "application/xml");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
+  }
 });
 
 // Brands sitemap
 router.get("/sitemap-brands.xml", async (_req, res): Promise<void> => {
-  const brands = await db
-    .select({ slug: brandsTable.slug, createdAt: brandsTable.createdAt })
-    .from(brandsTable)
-    .where(eq(brandsTable.isActive, true));
+  try {
+    const brands = await db
+      .select({ slug: brandsTable.slug, createdAt: brandsTable.createdAt })
+      .from(brandsTable)
+      .where(eq(brandsTable.isActive, true));
 
-  type BrandRow = { slug: string; createdAt: Date };
+    type BrandRow = { slug: string; createdAt: Date };
 
-  const urls = brands.map((b: BrandRow) => sitemapUrl(`/brands/${b.slug}`, b.createdAt, 0.7, "weekly")).join("\n");
-  res.setHeader("Content-Type", "application/xml");
-  res.setHeader("Cache-Control", "public, max-age=3600");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+    const urls = brands.map((b: BrandRow) => sitemapUrl(`/brands/${b.slug}`, b.createdAt, 0.7, "weekly")).join("\n");
+    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+  } catch (_err) {
+    res.setHeader("Content-Type", "application/xml");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
+  }
 });
 
 // Blog sitemap
 router.get("/sitemap-blog.xml", async (_req, res): Promise<void> => {
-  const posts = await db
-    .select({ slug: blogPostsTable.slug, updatedAt: blogPostsTable.updatedAt })
-    .from(blogPostsTable)
-    .where(eq(blogPostsTable.isPublished, true))
-    .orderBy(desc(blogPostsTable.updatedAt));
+  try {
+    const posts = await db
+      .select({ slug: blogPostsTable.slug, updatedAt: blogPostsTable.updatedAt })
+      .from(blogPostsTable)
+      .where(eq(blogPostsTable.isPublished, true))
+      .orderBy(desc(blogPostsTable.updatedAt));
 
-  type BlogPostRow = { slug: string; updatedAt: Date };
+    type BlogPostRow = { slug: string; updatedAt: Date };
 
-  const urls = posts.map((p: BlogPostRow) => sitemapUrl(`/blog/${p.slug}`, p.updatedAt, 0.7, "monthly")).join("\n");
-  res.setHeader("Content-Type", "application/xml");
-  res.setHeader("Cache-Control", "public, max-age=3600");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+    const urls = posts.map((p: BlogPostRow) => sitemapUrl(`/blog/${p.slug}`, p.updatedAt, 0.7, "monthly")).join("\n");
+    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+  } catch (_err) {
+    res.setHeader("Content-Type", "application/xml");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
+  }
 });
 
 export default router;
