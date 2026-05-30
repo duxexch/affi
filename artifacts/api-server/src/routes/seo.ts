@@ -53,6 +53,17 @@ router.get("/sitemap-static.xml", (_req, res): void => {
     sitemapUrl("/brands", new Date(), 0.8, "weekly"),
     sitemapUrl("/blog", new Date(), 0.7, "daily"),
     sitemapUrl("/search", new Date(), 0.5, "monthly"),
+
+    sitemapUrl("/about", new Date(), 0.6, "weekly"),
+    sitemapUrl("/contact", new Date(), 0.6, "weekly"),
+    sitemapUrl("/privacy-policy", new Date(), 0.6, "weekly"),
+    sitemapUrl("/terms-of-service", new Date(), 0.6, "weekly"),
+    sitemapUrl("/faq", new Date(), 0.6, "weekly"),
+    sitemapUrl("/how-it-works", new Date(), 0.6, "weekly"),
+    sitemapUrl("/refund-policy", new Date(), 0.6, "weekly"),
+    sitemapUrl("/advertising", new Date(), 0.6, "weekly"),
+    sitemapUrl("/support", new Date(), 0.6, "weekly"),
+    sitemapUrl("/careers", new Date(), 0.6, "weekly"),
   ].join("\n");
   res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
 });

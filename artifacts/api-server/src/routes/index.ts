@@ -8,6 +8,7 @@ import brandsRouter from "./brands.js";
 import blogRouter from "./blog.js";
 import searchRouter from "./search.js";
 import seoRouter from "./seo.js";
+import seoPagesRouter from "./seo-pages.js";
 import redirectRouter from "./redirect.js";
 import couponsAdminRouter from "./admin/coupons.js";
 import uploadsAdminRouter from "./admin/uploads.js";
@@ -25,6 +26,7 @@ router.use(brandsRouter);
 router.use(blogRouter);
 router.use(searchRouter);
 router.use(seoRouter);
+router.use(seoPagesRouter);
 router.use(redirectRouter);
 
 // Admin “public” endpoints (used by frontend offer details)

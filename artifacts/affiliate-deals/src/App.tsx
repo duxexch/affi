@@ -17,6 +17,7 @@ import BrandDetail from "@/pages/brand-detail";
 import BlogList from "@/pages/blog";
 import BlogPostDetail from "@/pages/blog-detail";
 import SearchResults from "@/pages/search";
+import { SeoFixedPage } from "@/pages/seo-fixed-page";
 
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
@@ -26,6 +27,7 @@ import AdminBrands from "@/pages/admin/brands";
 import AdminBlog from "@/pages/admin/blog";
 import AdminIndexing from "@/pages/admin/indexing";
 import AdminUsers from "@/pages/admin/users";
+import AdminSeoPages from "@/pages/admin/seo-pages";
 
 // Wrap admin pages with auth guard
 const ProtectedDashboard = withAdminAuth(AdminDashboard);
@@ -35,6 +37,7 @@ const ProtectedBrands = withAdminAuth(AdminBrands);
 const ProtectedBlog = withAdminAuth(AdminBlog);
 const ProtectedIndexing = withAdminAuth(AdminIndexing);
 const ProtectedUsers = withAdminAuth(AdminUsers);
+const ProtectedSeoPages = withAdminAuth(AdminSeoPages);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,12 +62,25 @@ function Router() {
       <Route path="/blog/:slug" component={BlogPostDetail} />
       <Route path="/search" component={SearchResults} />
 
+      {/* Fixed SEO pages */}
+      <Route path="/about" component={() => <SeoFixedPage slug="about" />} />
+      <Route path="/contact" component={() => <SeoFixedPage slug="contact" />} />
+      <Route path="/privacy-policy" component={() => <SeoFixedPage slug="privacy-policy" />} />
+      <Route path="/terms-of-service" component={() => <SeoFixedPage slug="terms-of-service" />} />
+      <Route path="/faq" component={() => <SeoFixedPage slug="faq" />} />
+      <Route path="/how-it-works" component={() => <SeoFixedPage slug="how-it-works" />} />
+      <Route path="/refund-policy" component={() => <SeoFixedPage slug="refund-policy" />} />
+      <Route path="/advertising" component={() => <SeoFixedPage slug="advertising" />} />
+      <Route path="/support" component={() => <SeoFixedPage slug="support" />} />
+      <Route path="/careers" component={() => <SeoFixedPage slug="careers" />} />
+
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={ProtectedDashboard} />
       <Route path="/admin/offers" component={ProtectedOffers} />
       <Route path="/admin/categories" component={ProtectedCategories} />
       <Route path="/admin/brands" component={ProtectedBrands} />
       <Route path="/admin/blog" component={ProtectedBlog} />
+      <Route path="/admin/seo-pages" component={ProtectedSeoPages} />
       <Route path="/admin/indexing" component={ProtectedIndexing} />
       <Route path="/admin/users" component={ProtectedUsers} />
 

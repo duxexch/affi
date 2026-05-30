@@ -8,3 +8,4 @@ export * from "./sessions";
 export * from "./audit_logs";
 export * from "./coupons";
 export * from "./clicks";
+export * from "./seo_pages";

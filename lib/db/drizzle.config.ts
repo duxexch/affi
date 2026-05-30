@@ -31,7 +31,8 @@ function getDatabaseUrl(): string {
 const databaseUrl = getDatabaseUrl();
 
 export default defineConfig({
-  schema: path.join(__dirname, "./src/schema/index.ts"),
+  // Use relative path to help drizzle-kit schema discovery on Windows.
+  schema: "./src/schema/index.ts",
   dialect: "mysql",
   dbCredentials: {
     url: databaseUrl,
