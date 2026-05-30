@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { GoogleTranslateClone } from "@/components/google-translate-clone";
+import { TranslationIFrame } from "@/components/translation-iframe";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [, setLocation] = useLocation();
@@ -74,7 +74,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="flex-1 container mx-auto px-4 py-8">
-        <GoogleTranslateClone scope="user">{children}</GoogleTranslateClone>
+        <TranslationIFrame scope="user">{children}</TranslationIFrame>
       </main>
       <footer className="border-t py-8 bg-muted/40">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
