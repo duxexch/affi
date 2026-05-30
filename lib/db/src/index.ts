@@ -4,11 +4,29 @@ import mysql from "mysql2/promise";
 import { usersTable } from "./schema/users";
 import { sessionsTable } from "./schema/sessions";
 
-// نُسند drizzle schema فقط لـ users/sessions عشان auth يشتغل
-// (باقي الجداول ممكن تكون لسه Postgres-core وتسبب crash/503 لو دخلت في schema الخاص بـ drizzle)
+// CONTENT APIs (offers/categories/brands/blog/search/seo) require these tables
+// to be present in the drizzle schema instance used by runtime queries.
+import { offersTable } from "./schema/offers";
+import { categoriesTable } from "./schema/categories";
+import { brandsTable } from "./schema/brands";
+import { blogPostsTable } from "./schema/blog_posts";
+import { couponsTable } from "./schema/coupons";
+import { clicksTable } from "./schema/clicks";
+
+// NOTE:
+// If any of these tables are still defined via Postgres-core types,
+// MySQL runtime may throw when building SQL. This step is to make
+// sure /api/* routes no longer fail due to missing schema registration;
+// if dialect mismatch errors appear, we then port the schemas to mysql-core.
 const drizzleSchema = {
   usersTable,
   sessionsTable,
+  offersTable,
+  categoriesTable,
+  brandsTable,
+  blogPostsTable,
+  couponsTable,
+  clicksTable,
 };
 
 function getMysqlConfig(): mysql.PoolOptions {
