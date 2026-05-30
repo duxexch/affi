@@ -28,6 +28,12 @@ if (existsSync(staticDir)) {
   logger.info({ staticDir }, "Serving React static files");
   app.use(express.static(staticDir));
 
+  // Serve uploaded media from: artifacts/affiliate-deals/dist/public/uploads
+  const uploadsStaticDir = path.resolve(serverDir, "..", "..", "affiliate-deals", "dist", "public", "uploads");
+  if (existsSync(uploadsStaticDir)) {
+    app.use("/uploads", express.static(uploadsStaticDir));
+  }
+
   // Express 5 (path-to-regexp) can crash on wildcard route patterns like "/*".
   // Use middleware fallback instead of a wildcard route.
   app.use((req, res, next) => {
