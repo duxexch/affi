@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { Offer } from "@workspace/api-client-react";
+import { uploadMediaFile } from "@/lib/upload";
 
 const offerSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -34,7 +35,8 @@ const offerSchema = z.object({
   originalPrice: z.coerce.number().optional(),
   currentPrice: z.coerce.number().optional(),
   currency: z.string().default("$"),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  // upload endpoint returns relative url like "/uploads/..."
+  imageUrl: z.string().optional().or(z.literal("")),
   affiliateUrl: z.string().url("Must be a valid URL").min(1, "Affiliate URL is required"),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
@@ -48,7 +50,8 @@ export default function AdminOffers() {
   const [page, setPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
-  
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const { data, isLoading } = useListOffers({ page, limit: 20 });
   const { data: categories } = useListCategories();
   const { data: brands } = useListBrands();
@@ -82,6 +85,26 @@ export default function AdminOffers() {
 
   const generateSlug = (title: string) => {
     return title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  };
+
+  const imageUrlValue = form.watch("imageUrl");
+
+  const handleUploadMedia = async (file: File | null) => {
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const uploaded = await uploadMediaFile(file);
+      form.setValue("imageUrl", uploaded.url, { shouldDirty: true });
+      toast({
+        title: "Upload success",
+        description: uploaded.url,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Upload failed";
+      toast({ title: "Upload failed", description: message, variant: "destructive" });
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleOpenCreate = () => {
@@ -327,10 +350,36 @@ export default function AdminOffers() {
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>Image (upload from device)</FormLabel>
+
                       <FormControl>
-                        <Input {...field} type="url" />
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="file"
+                              accept="image/*,video/*"
+                              onChange={(e) => handleUploadMedia(e.currentTarget.files?.[0] ?? null)}
+                              disabled={uploadingImage}
+                            />
+                            {uploadingImage && <span className="text-sm text-muted-foreground">Uploading...</span>}
+                          </div>
+
+                          {imageUrlValue ? (
+                            <div className="flex flex-col gap-2">
+                              {/* Offer UI uses <img>, so image works; if video uploaded, at least URL still stored */}
+                              <img
+                                src={imageUrlValue}
+                                alt="Preview"
+                                className="w-full max-w-[180px] rounded border bg-muted"
+                              />
+                              <Input {...field} value={field.value ?? ""} disabled className="opacity-70" />
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">No file selected yet.</div>
+                          )}
+                        </div>
                       </FormControl>
+
                       <FormMessage />
                     </FormItem>
                   )}

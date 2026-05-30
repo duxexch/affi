@@ -21,12 +21,14 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { Brand } from "@workspace/api-client-react";
+import { uploadMediaFile } from "@/lib/upload";
 
 const brandSchema = z.object({
   name: z.string().min(1, "Name is required"),
   slug: z.string().min(1, "Slug is required"),
   description: z.string().optional(),
-  logoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  // Accept absolute URLs OR our local upload urls: "/uploads/..."
+  logoUrl: z.string().optional().or(z.literal("")),
   websiteUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   isActive: z.boolean().default(true),
 });
@@ -36,6 +38,7 @@ type BrandFormValues = z.infer<typeof brandSchema>;
 export default function AdminBrands() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   
   const { data: brands, isLoading } = useListBrands();
   
@@ -60,6 +63,26 @@ export default function AdminBrands() {
 
   const generateSlug = (title: string) => {
     return title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  };
+
+  const logoUrlValue = form.watch("logoUrl");
+
+  const handleUploadLogo = async (file: File | null) => {
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const uploaded = await uploadMediaFile(file);
+      form.setValue("logoUrl", uploaded.url, { shouldDirty: true });
+      toast({
+        title: "Upload success",
+        description: uploaded.url,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Upload failed";
+      toast({ title: "Upload failed", description: message, variant: "destructive" });
+    } finally {
+      setUploadingLogo(false);
+    }
   };
 
   const handleOpenCreate = () => {
@@ -200,9 +223,32 @@ export default function AdminBrands() {
                   name="logoUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Logo URL</FormLabel>
+                      <FormLabel>Logo (upload from device)</FormLabel>
                       <FormControl>
-                        <Input {...field} type="url" />
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="file"
+                              accept="image/*,video/*"
+                              onChange={(e) => handleUploadLogo(e.currentTarget.files?.[0] ?? null)}
+                              disabled={uploadingLogo}
+                            />
+                            {uploadingLogo && <span className="text-sm text-muted-foreground">Uploading...</span>}
+                          </div>
+
+                          {logoUrlValue ? (
+                            <div className="flex flex-col gap-2">
+                              <img
+                                src={logoUrlValue}
+                                alt="Logo preview"
+                                className="w-full max-w-[180px] rounded border bg-muted"
+                              />
+                              <Input {...field} value={field.value ?? ""} disabled className="opacity-70" />
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">No file selected yet.</div>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

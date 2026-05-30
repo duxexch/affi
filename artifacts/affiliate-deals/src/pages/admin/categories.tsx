@@ -21,12 +21,14 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { Category } from "@workspace/api-client-react";
+import { uploadMediaFile } from "@/lib/upload";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Name is required"),
   slug: z.string().min(1, "Slug is required"),
   description: z.string().optional(),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  // Accept both absolute URLs and our local upload urls: "/uploads/..."
+  imageUrl: z.string().optional().or(z.literal("")),
   isActive: z.boolean().default(true),
 });
 
@@ -35,6 +37,7 @@ type CategoryFormValues = z.infer<typeof categorySchema>;
 export default function AdminCategories() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   const { data: categories, isLoading } = useListCategories();
   
@@ -58,6 +61,26 @@ export default function AdminCategories() {
 
   const generateSlug = (title: string) => {
     return title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  };
+
+  const imageUrlValue = form.watch("imageUrl");
+
+  const handleUploadMedia = async (file: File | null) => {
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const uploaded = await uploadMediaFile(file);
+      form.setValue("imageUrl", uploaded.url, { shouldDirty: true });
+      toast({
+        title: "Upload success",
+        description: uploaded.url,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Upload failed";
+      toast({ title: "Upload failed", description: message, variant: "destructive" });
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleOpenCreate = () => {
@@ -194,9 +217,32 @@ export default function AdminCategories() {
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>Image (upload from device)</FormLabel>
                       <FormControl>
-                        <Input {...field} type="url" />
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="file"
+                              accept="image/*,video/*"
+                              onChange={(e) => handleUploadMedia(e.currentTarget.files?.[0] ?? null)}
+                              disabled={uploadingImage}
+                            />
+                            {uploadingImage && <span className="text-sm text-muted-foreground">Uploading...</span>}
+                          </div>
+
+                          {imageUrlValue ? (
+                            <div className="flex flex-col gap-2">
+                              <img
+                                src={imageUrlValue}
+                                alt="Preview"
+                                className="w-full max-w-[180px] rounded border bg-muted"
+                              />
+                              <Input {...field} value={field.value ?? ""} disabled className="opacity-70" />
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">No file selected yet.</div>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
