@@ -12,5 +12,12 @@ export interface CategoryInput {
   slug?: string;
   description?: string;
   imageUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
 }

@@ -13,5 +13,12 @@ export interface BlogPostUpdate {
   excerpt?: string;
   content?: string;
   imageUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isPublished?: boolean;
 }

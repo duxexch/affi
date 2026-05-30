@@ -1,6 +1,7 @@
 import { useGetCategory, useListOffers, getGetCategoryQueryKey, getListOffersQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { OfferCard } from "@/components/offer-card";
+import { SocialLinks } from "@/components/social-links";
 import { useParams, Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 
@@ -42,6 +43,16 @@ export default function CategoryDetail() {
           {category.description && (
             <p className="text-muted-foreground mt-2 max-w-3xl">{category.description}</p>
           )}
+
+            <SocialLinks
+              whatsapp={(category as any).whatsapp}
+              telegram={(category as any).telegram}
+              facebook={(category as any).facebook}
+              instagram={(category as any).instagram}
+              email={(category as any).email}
+              phone={(category as any).phone}
+              website={(category as any).website}
+            />
         </div>
       ) : (
         <div className="mb-8">

@@ -9,6 +9,16 @@ export const brandsTable = pgTable("brands", {
   description: text("description"),
   logoUrl: text("logo_url"),
   websiteUrl: text("website_url"),
+
+  // Social/contact links (optional)
+  whatsapp: text("whatsapp"),
+  telegram: text("telegram"),
+  facebook: text("facebook"),
+  instagram: text("instagram"),
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

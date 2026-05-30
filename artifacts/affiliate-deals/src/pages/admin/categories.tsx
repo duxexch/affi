@@ -29,6 +29,15 @@ const categorySchema = z.object({
   description: z.string().optional(),
   // Accept both absolute URLs and our local upload urls: "/uploads/..."
   imageUrl: z.string().optional().or(z.literal("")),
+
+  whatsapp: z.string().optional().or(z.literal("")),
+  telegram: z.string().optional().or(z.literal("")),
+  facebook: z.string().optional().or(z.literal("")),
+  instagram: z.string().optional().or(z.literal("")),
+  email: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  website: z.string().optional().or(z.literal("")),
+
   isActive: z.boolean().default(true),
 });
 
@@ -55,6 +64,13 @@ export default function AdminCategories() {
       slug: "",
       description: "",
       imageUrl: "",
+      whatsapp: "",
+      telegram: "",
+      facebook: "",
+      instagram: "",
+      email: "",
+      phone: "",
+      website: "",
       isActive: true,
     }
   });
@@ -91,6 +107,13 @@ export default function AdminCategories() {
       slug: "",
       description: "",
       imageUrl: "",
+      whatsapp: "",
+      telegram: "",
+      facebook: "",
+      instagram: "",
+      email: "",
+      phone: "",
+      website: "",
       isActive: true,
     });
     setIsDialogOpen(true);
@@ -103,6 +126,13 @@ export default function AdminCategories() {
       slug: category.slug,
       description: category.description || "",
       imageUrl: category.imageUrl || "",
+      whatsapp: (category as any).whatsapp || "",
+      telegram: (category as any).telegram || "",
+      facebook: (category as any).facebook || "",
+      instagram: (category as any).instagram || "",
+      email: (category as any).email || "",
+      phone: (category as any).phone || "",
+      website: (category as any).website || "",
       isActive: category.isActive,
     });
     setIsDialogOpen(true);
@@ -257,6 +287,100 @@ export default function AdminCategories() {
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="whatsapp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>WhatsApp</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://wa.me/..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="telegram"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telegram</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://t.me/..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="facebook"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Facebook</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://facebook.com/..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="instagram"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instagram</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://instagram.com/..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="name@example.com" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="+201..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>Website</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://example.com" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}

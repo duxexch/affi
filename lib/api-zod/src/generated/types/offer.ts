@@ -22,6 +22,20 @@ export interface Offer {
   /** @nullable */
   imageUrl?: string | null;
   affiliateUrl?: string;
+  /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
+  telegram?: string | null;
+  /** @nullable */
+  facebook?: string | null;
+  /** @nullable */
+  instagram?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
   isActive: boolean;
   isFeatured: boolean;
   clickCount: number;

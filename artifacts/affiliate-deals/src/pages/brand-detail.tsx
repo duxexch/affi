@@ -1,6 +1,7 @@
 import { useGetBrand, useListOffers, getGetBrandQueryKey, getListOffersQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { OfferCard } from "@/components/offer-card";
+import { SocialLinks } from "@/components/social-links";
 import { useParams, Link } from "wouter";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,16 @@ export default function BrandDetail() {
             {brand.description && (
               <p className="text-muted-foreground mt-2 max-w-3xl">{brand.description}</p>
             )}
+
+              <SocialLinks
+                whatsapp={(brand as any).whatsapp}
+                telegram={(brand as any).telegram}
+                facebook={(brand as any).facebook}
+                instagram={(brand as any).instagram}
+                email={(brand as any).email}
+                phone={(brand as any).phone}
+                website={(brand as any).website}
+              />
           </div>
           {brand.websiteUrl && (
             <Button variant="outline" asChild>

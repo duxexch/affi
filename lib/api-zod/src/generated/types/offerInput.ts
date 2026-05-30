@@ -19,6 +19,13 @@ export interface OfferInput {
   imageUrl?: string;
   /** @minLength 1 */
   affiliateUrl: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
   isFeatured?: boolean;
   categoryId?: number;

@@ -14,6 +14,20 @@ export interface Category {
   description?: string | null;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
+  telegram?: string | null;
+  /** @nullable */
+  facebook?: string | null;
+  /** @nullable */
+  instagram?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
   offerCount?: number;
   isActive: boolean;
 }

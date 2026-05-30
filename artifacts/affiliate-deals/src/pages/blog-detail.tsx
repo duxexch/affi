@@ -1,6 +1,7 @@
 import { useGetBlogPost, getGetBlogPostQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { Seo, articleJsonLd, breadcrumbJsonLd } from "@/components/seo";
+import { SocialLinks } from "@/components/social-links";
 import { useParams, Link } from "wouter";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
@@ -75,6 +76,16 @@ export default function BlogPostDetail() {
           <div className="text-muted-foreground font-medium">
             Published on {format(new Date(post.createdAt), "MMMM d, yyyy")}
           </div>
+
+          <SocialLinks
+            whatsapp={(post as any).whatsapp}
+            telegram={(post as any).telegram}
+            facebook={(post as any).facebook}
+            instagram={(post as any).instagram}
+            email={(post as any).email}
+            phone={(post as any).phone}
+            website={(post as any).website}
+          />
         </header>
 
         {post.imageUrl && (

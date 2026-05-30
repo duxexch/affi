@@ -14,6 +14,16 @@ export const offersTable = pgTable("offers", {
   currency: text("currency").notNull().default("USD"),
   imageUrl: text("image_url"),
   affiliateUrl: text("affiliate_url").notNull(),
+
+  // Social/contact links (optional)
+  whatsapp: text("whatsapp"),
+  telegram: text("telegram"),
+  facebook: text("facebook"),
+  instagram: text("instagram"),
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+
   isActive: boolean("is_active").notNull().default(true),
   isFeatured: boolean("is_featured").notNull().default(false),
   clickCount: integer("click_count").notNull().default(0),

@@ -574,6 +574,13 @@ components:
         currency: { type: string, default: "USD" }
         imageUrl: { type: ["string", "null"] }
         affiliateUrl: { type: string }
+        whatsapp: { type: ["string", "null"] }
+        telegram: { type: ["string", "null"] }
+        facebook: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
         isActive: { type: boolean }
         isFeatured: { type: boolean }
         clickCount: { type: integer }
@@ -601,6 +608,13 @@ components:
         currency: { type: string }
         imageUrl: { type: ["string", "null"] }
         affiliateUrl: { type: string }
+        whatsapp: { type: ["string", "null"] }
+        telegram: { type: ["string", "null"] }
+        facebook: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
         isActive: { type: boolean }
         isFeatured: { type: boolean }
         clickCount: { type: integer }
@@ -644,6 +658,13 @@ components:
         currency: { type: string, default: "USD" }
         imageUrl: { type: string }
         affiliateUrl: { type: string, minLength: 1 }
+        whatsapp: { type: string }
+        telegram: { type: string }
+        facebook: { type: string }
+        instagram: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        website: { type: string }
         isActive: { type: boolean, default: true }
         isFeatured: { type: boolean, default: false }
         categoryId: { type: integer }
@@ -662,6 +683,13 @@ components:
         currency: { type: string }
         imageUrl: { type: string }
         affiliateUrl: { type: string }
+        whatsapp: { type: string }
+        telegram: { type: string }
+        facebook: { type: string }
+        instagram: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        website: { type: string }
         isActive: { type: boolean }
         isFeatured: { type: boolean }
         categoryId: { type: ["integer", "null"] }
@@ -677,6 +705,13 @@ components:
         slug: { type: string }
         description: { type: ["string", "null"] }
         imageUrl: { type: ["string", "null"] }
+        whatsapp: { type: ["string", "null"] }
+        telegram: { type: ["string", "null"] }
+        facebook: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
         offerCount: { type: integer, default: 0 }
         isActive: { type: boolean }
 
@@ -701,6 +736,13 @@ components:
         slug: { type: string }
         description: { type: string }
         imageUrl: { type: string }
+        whatsapp: { type: string }
+        telegram: { type: string }
+        facebook: { type: string }
+        instagram: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        website: { type: string }
         isActive: { type: boolean, default: true }
 
     CategoryUpdate:
@@ -710,6 +752,13 @@ components:
         slug: { type: string }
         description: { type: string }
         imageUrl: { type: string }
+        whatsapp: { type: string }
+        telegram: { type: string }
+        facebook: { type: string }
+        instagram: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        website: { type: string }
         isActive: { type: boolean }
 
     # ── Brand ─────────────────────────────────────────────────────────────
@@ -723,6 +772,13 @@ components:
         description: { type: ["string", "null"] }
         logoUrl: { type: ["string", "null"] }
         websiteUrl: { type: ["string", "null"] }
+        whatsapp: { type: ["string", "null"] }
+        telegram: { type: ["string", "null"] }
+        facebook: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
         offerCount: { type: integer, default: 0 }
         isActive: { type: boolean }
 
@@ -736,6 +792,13 @@ components:
         description: { type: ["string", "null"] }
         logoUrl: { type: ["string", "null"] }
         websiteUrl: { type: ["string", "null"] }
+        whatsapp: { type: ["string", "null"] }
+        telegram: { type: ["string", "null"] }
+        facebook: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
         isActive: { type: boolean }
         offers:
           $ref: "#/components/schemas/OfferListResponse"
@@ -749,6 +812,13 @@ components:
         description: { type: string }
         logoUrl: { type: string }
         websiteUrl: { type: string }
+        whatsapp: { type: string }
+        telegram: { type: string }
+        facebook: { type: string }
+        instagram: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        website: { type: string }
         isActive: { type: boolean, default: true }
 
     BrandUpdate:
@@ -759,6 +829,13 @@ components:
         description: { type: string }
         logoUrl: { type: string }
         websiteUrl: { type: string }
+        whatsapp: { type: string }
+        telegram: { type: string }
+        facebook: { type: string }
+        instagram: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        website: { type: string }
         isActive: { type: boolean }
 
     # ── BlogPost ──────────────────────────────────────────────────────────
@@ -772,6 +849,13 @@ components:
         excerpt: { type: ["string", "null"] }
         content: { type: ["string", "null"] }
         imageUrl: { type: ["string", "null"] }
+        whatsapp: { type: ["string", "null"] }
+        telegram: { type: ["string", "null"] }
+        facebook: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
         isPublished: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -797,6 +881,13 @@ components:
         excerpt: { type: string }
         content: { type: string }
         imageUrl: { type: string }
+        whatsapp: { type: string }
+        telegram: { type: string }
+        facebook: { type: string }
+        instagram: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        website: { type: string }
         isPublished: { type: boolean, default: false }
 
     BlogPostUpdate:
@@ -807,6 +898,13 @@ components:
         excerpt: { type: string }
         content: { type: string }
         imageUrl: { type: string }
+        whatsapp: { type: string }
+        telegram: { type: string }
+        facebook: { type: string }
+        instagram: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        website: { type: string }
         isPublished: { type: boolean }
 
     # ── Search ────────────────────────────────────────────────────────────

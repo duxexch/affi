@@ -38,6 +38,16 @@ const offerSchema = z.object({
   // upload endpoint returns relative url like "/uploads/..."
   imageUrl: z.string().optional().or(z.literal("")),
   affiliateUrl: z.string().url("Must be a valid URL").min(1, "Affiliate URL is required"),
+
+  // Social/contact links
+  whatsapp: z.string().optional().or(z.literal("")),
+  telegram: z.string().optional().or(z.literal("")),
+  facebook: z.string().optional().or(z.literal("")),
+  instagram: z.string().optional().or(z.literal("")),
+  email: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  website: z.string().optional().or(z.literal("")),
+
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   categoryId: z.coerce.number().optional(),
@@ -77,6 +87,15 @@ export default function AdminOffers() {
       currency: "$",
       imageUrl: "",
       affiliateUrl: "",
+
+      whatsapp: "",
+      telegram: "",
+      facebook: "",
+      instagram: "",
+      email: "",
+      phone: "",
+      website: "",
+
       isActive: true,
       isFeatured: false,
       categoryId: undefined,
@@ -122,6 +141,15 @@ export default function AdminOffers() {
       currency: "$",
       imageUrl: "",
       affiliateUrl: "",
+
+      whatsapp: "",
+      telegram: "",
+      facebook: "",
+      instagram: "",
+      email: "",
+      phone: "",
+      website: "",
+
       isActive: true,
       isFeatured: false,
       categoryId: undefined,
@@ -143,6 +171,15 @@ export default function AdminOffers() {
       currency: offer.currency || "$",
       imageUrl: offer.imageUrl || "",
       affiliateUrl: offer.affiliateUrl,
+
+      whatsapp: (offer as any).whatsapp || "",
+      telegram: (offer as any).telegram || "",
+      facebook: (offer as any).facebook || "",
+      instagram: (offer as any).instagram || "",
+      email: (offer as any).email || "",
+      phone: (offer as any).phone || "",
+      website: (offer as any).website || "",
+
       isActive: offer.isActive,
       isFeatured: offer.isFeatured,
       categoryId: offer.categoryId || undefined,
@@ -346,7 +383,106 @@ export default function AdminOffers() {
                     </FormItem>
                   )}
                 />
-                
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="whatsapp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>WhatsApp</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://wa.me/..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="telegram"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telegram</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://t.me/..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="facebook"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Facebook</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://facebook.com/..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="instagram"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instagram</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://instagram.com/..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="name@example.com" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="+201..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Website</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://example.com" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex items-end pb-1">
+                    <span className="text-xs text-muted-foreground">
+                      (Leave empty for no button)
+                    </span>
+                  </div>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="imageUrl"

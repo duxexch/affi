@@ -9,6 +9,16 @@ export const blogPostsTable = pgTable("blog_posts", {
   excerpt: text("excerpt"),
   content: text("content"),
   imageUrl: text("image_url"),
+
+  // Social/contact links (optional)
+  whatsapp: text("whatsapp"),
+  telegram: text("telegram"),
+  facebook: text("facebook"),
+  instagram: text("instagram"),
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+
   isPublished: boolean("is_published").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

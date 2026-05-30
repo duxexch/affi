@@ -11,6 +11,7 @@ import { ExternalLink, ArrowLeft, Tag, Copy, Check, Ticket } from "lucide-react"
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { SocialLinks } from "@/components/social-links";
 
 interface Coupon {
   id: number;
@@ -188,6 +189,16 @@ export default function OfferDetail() {
             {trackClick.isPending ? "Getting Deal..." : "Get Deal"}
             <ExternalLink className="ml-2 h-5 w-5" />
           </Button>
+
+          <SocialLinks
+            whatsapp={(offer as any).whatsapp}
+            telegram={(offer as any).telegram}
+            facebook={(offer as any).facebook}
+            instagram={(offer as any).instagram}
+            email={(offer as any).email}
+            phone={(offer as any).phone}
+            website={(offer as any).website}
+          />
 
           {coupons.length > 0 && (
             <Card className="mt-2">

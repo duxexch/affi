@@ -25,6 +25,20 @@ export interface Offer {
   /** @nullable */
   imageUrl?: string | null;
   affiliateUrl?: string;
+  /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
+  telegram?: string | null;
+  /** @nullable */
+  facebook?: string | null;
+  /** @nullable */
+  instagram?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
   isActive: boolean;
   isFeatured: boolean;
   clickCount: number;
@@ -62,6 +76,20 @@ export interface OfferDetail {
   /** @nullable */
   imageUrl?: string | null;
   affiliateUrl?: string;
+  /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
+  telegram?: string | null;
+  /** @nullable */
+  facebook?: string | null;
+  /** @nullable */
+  instagram?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
   isActive: boolean;
   isFeatured: boolean;
   clickCount: number;
@@ -104,6 +132,13 @@ export interface OfferInput {
   imageUrl?: string;
   /** @minLength 1 */
   affiliateUrl: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
   isFeatured?: boolean;
   categoryId?: number;
@@ -122,6 +157,13 @@ export interface OfferUpdate {
   currency?: string;
   imageUrl?: string;
   affiliateUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
   isFeatured?: boolean;
   /** @nullable */
@@ -138,6 +180,20 @@ export interface Category {
   description?: string | null;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
+  telegram?: string | null;
+  /** @nullable */
+  facebook?: string | null;
+  /** @nullable */
+  instagram?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
   offerCount?: number;
   isActive: boolean;
 }
@@ -160,6 +216,13 @@ export interface CategoryInput {
   slug?: string;
   description?: string;
   imageUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
 }
 
@@ -169,6 +232,13 @@ export interface CategoryUpdate {
   slug?: string;
   description?: string;
   imageUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
 }
 
@@ -182,6 +252,20 @@ export interface Brand {
   logoUrl?: string | null;
   /** @nullable */
   websiteUrl?: string | null;
+  /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
+  telegram?: string | null;
+  /** @nullable */
+  facebook?: string | null;
+  /** @nullable */
+  instagram?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
   offerCount?: number;
   isActive: boolean;
 }
@@ -196,6 +280,20 @@ export interface BrandDetail {
   logoUrl?: string | null;
   /** @nullable */
   websiteUrl?: string | null;
+  /** @nullable */
+  whatsapp?: string | null;
+  /** @nullable */
+  telegram?: string | null;
+  /** @nullable */
+  facebook?: string | null;
+  /** @nullable */
+  instagram?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
   isActive: boolean;
   offers: OfferListResponse;
 }
@@ -207,6 +305,13 @@ export interface BrandInput {
   description?: string;
   logoUrl?: string;
   websiteUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
 }
 
@@ -217,6 +322,13 @@ export interface BrandUpdate {
   description?: string;
   logoUrl?: string;
   websiteUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
 }
 
@@ -249,6 +361,13 @@ export interface BlogPostInput {
   excerpt?: string;
   content?: string;
   imageUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isPublished?: boolean;
 }
 
@@ -259,6 +378,13 @@ export interface BlogPostUpdate {
   excerpt?: string;
   content?: string;
   imageUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isPublished?: boolean;
 }
 

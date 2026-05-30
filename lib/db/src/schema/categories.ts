@@ -8,6 +8,16 @@ export const categoriesTable = pgTable("categories", {
   slug: text("slug").notNull().unique(),
   description: text("description"),
   imageUrl: text("image_url"),
+
+  // Social/contact links (optional)
+  whatsapp: text("whatsapp"),
+  telegram: text("telegram"),
+  facebook: text("facebook"),
+  instagram: text("instagram"),
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

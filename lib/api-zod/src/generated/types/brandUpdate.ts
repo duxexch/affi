@@ -13,5 +13,12 @@ export interface BrandUpdate {
   description?: string;
   logoUrl?: string;
   websiteUrl?: string;
+  whatsapp?: string;
+  telegram?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
   isActive?: boolean;
 }
