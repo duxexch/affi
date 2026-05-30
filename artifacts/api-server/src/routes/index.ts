@@ -10,6 +10,7 @@ import searchRouter from "./search.js";
 import seoRouter from "./seo.js";
 import redirectRouter from "./redirect.js";
 import couponsAdminRouter from "./admin/coupons.js";
+import uploadsAdminRouter from "./admin/uploads.js";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,8 @@ router.use(redirectRouter);
 
 // Admin “public” endpoints (used by frontend offer details)
 router.use(couponsAdminRouter);
+
+// Admin uploads (used by admin panel to upload images/videos)
+router.use(uploadsAdminRouter);
 
 export default router;
