@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
@@ -8,6 +9,10 @@ export function withAdminAuth<P extends object>(Component: ComponentType<P>) {
     const { isAuthenticated, isLoading } = useAuth();
     const [, navigate] = useLocation();
 
+    useEffect(() => {
+      if (!isLoading && !isAuthenticated) navigate("/admin/login");
+    }, [isAuthenticated, isLoading, navigate]);
+
     if (isLoading) {
       return (
         <div className="min-h-screen flex items-center justify-center">
@@ -16,10 +21,7 @@ export function withAdminAuth<P extends object>(Component: ComponentType<P>) {
       );
     }
 
-    if (!isAuthenticated) {
-      navigate("/admin/login");
-      return null;
-    }
+    if (!isAuthenticated) return null;
 
     return <Component {...props} />;
   };
