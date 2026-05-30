@@ -67,6 +67,7 @@ export default function AdminBlog() {
   };
 
   const imageUrlValue = form.watch("imageUrl");
+  const isVideoUrl = !!imageUrlValue && /\.(mp4|webm|ogg|mov)$/i.test(imageUrlValue);
 
   const handleUploadMedia = async (file: File | null) => {
     if (!file) return;
@@ -253,11 +254,19 @@ export default function AdminBlog() {
 
                           {imageUrlValue ? (
                             <div className="flex flex-col gap-2">
-                              <img
-                                src={imageUrlValue}
-                                alt="Preview"
-                                className="w-full max-w-[180px] rounded border bg-muted"
-                              />
+                              {isVideoUrl ? (
+                                <video
+                                  src={imageUrlValue}
+                                  controls
+                                  className="w-full max-w-[240px] rounded border bg-muted"
+                                />
+                              ) : (
+                                  <img
+                                    src={imageUrlValue}
+                                    alt="Preview"
+                                    className="w-full max-w-[180px] rounded border bg-muted"
+                                  />
+                              )}
                               <Input {...field} value={field.value ?? ""} disabled className="opacity-70" />
                             </div>
                           ) : (

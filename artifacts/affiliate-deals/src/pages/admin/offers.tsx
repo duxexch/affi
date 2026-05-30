@@ -51,6 +51,7 @@ export default function AdminOffers() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadedMimeType, setUploadedMimeType] = useState<string | null>(null);
 
   const { data, isLoading } = useListOffers({ page, limit: 20 });
   const { data: categories } = useListCategories();
@@ -95,6 +96,7 @@ export default function AdminOffers() {
     try {
       const uploaded = await uploadMediaFile(file);
       form.setValue("imageUrl", uploaded.url, { shouldDirty: true });
+      setUploadedMimeType(uploaded.mimetype);
       toast({
         title: "Upload success",
         description: uploaded.url,
@@ -366,12 +368,19 @@ export default function AdminOffers() {
 
                           {imageUrlValue ? (
                             <div className="flex flex-col gap-2">
-                              {/* Offer UI uses <img>, so image works; if video uploaded, at least URL still stored */}
-                              <img
-                                src={imageUrlValue}
-                                alt="Preview"
-                                className="w-full max-w-[180px] rounded border bg-muted"
-                              />
+                              {uploadedMimeType?.startsWith("video/") ? (
+                                <video
+                                  src={imageUrlValue}
+                                  controls
+                                  className="w-full max-w-[240px] rounded border bg-muted"
+                                />
+                              ) : (
+                                <img
+                                  src={imageUrlValue}
+                                  alt="Preview"
+                                  className="w-full max-w-[180px] rounded border bg-muted"
+                                />
+                              )}
                               <Input {...field} value={field.value ?? ""} disabled className="opacity-70" />
                             </div>
                           ) : (

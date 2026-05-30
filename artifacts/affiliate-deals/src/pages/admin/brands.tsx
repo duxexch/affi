@@ -66,6 +66,7 @@ export default function AdminBrands() {
   };
 
   const logoUrlValue = form.watch("logoUrl");
+  const isVideoUrl = !!logoUrlValue && /\.(mp4|webm|ogg|mov)$/i.test(logoUrlValue);
 
   const handleUploadLogo = async (file: File | null) => {
     if (!file) return;
@@ -238,11 +239,19 @@ export default function AdminBrands() {
 
                           {logoUrlValue ? (
                             <div className="flex flex-col gap-2">
-                              <img
-                                src={logoUrlValue}
-                                alt="Logo preview"
-                                className="w-full max-w-[180px] rounded border bg-muted"
-                              />
+                              {isVideoUrl ? (
+                                <video
+                                  src={logoUrlValue}
+                                  controls
+                                  className="w-full max-w-[240px] rounded border bg-muted"
+                                />
+                              ) : (
+                                  <img
+                                    src={logoUrlValue}
+                                    alt="Logo preview"
+                                    className="w-full max-w-[180px] rounded border bg-muted"
+                                  />
+                              )}
                               <Input {...field} value={field.value ?? ""} disabled className="opacity-70" />
                             </div>
                           ) : (
