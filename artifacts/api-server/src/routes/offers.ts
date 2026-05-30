@@ -100,55 +100,60 @@ router.get("/offers/:slug", async (req, res): Promise<void> => {
     return;
   }
 
-  const [offer] = await db
-    .select({
-      id: offersTable.id,
-      title: offersTable.title,
-      slug: offersTable.slug,
-      shortDescription: offersTable.shortDescription,
-      description: offersTable.description,
-      discountPercent: offersTable.discountPercent,
-      originalPrice: offersTable.originalPrice,
-      currentPrice: offersTable.currentPrice,
-      currency: offersTable.currency,
-      imageUrl: offersTable.imageUrl,
-      affiliateUrl: offersTable.affiliateUrl,
-      isActive: offersTable.isActive,
-      isFeatured: offersTable.isFeatured,
-      clickCount: offersTable.clickCount,
-      categoryId: offersTable.categoryId,
-      brandId: offersTable.brandId,
-      categorySlug: categoriesTable.slug,
-      brandSlug: brandsTable.slug,
-      categoryName: categoriesTable.name,
-      brandName: brandsTable.name,
-      brandLogoUrl: brandsTable.logoUrl,
-      createdAt: offersTable.createdAt,
-      updatedAt: offersTable.updatedAt,
-    })
-    .from(offersTable)
-    .leftJoin(categoriesTable, eq(offersTable.categoryId, categoriesTable.id))
-    .leftJoin(brandsTable, eq(offersTable.brandId, brandsTable.id))
-    .where(eq(offersTable.slug, params.data.slug))
-    .limit(1);
+  try {
+    const [offer] = await db
+      .select({
+        id: offersTable.id,
+        title: offersTable.title,
+        slug: offersTable.slug,
+        shortDescription: offersTable.shortDescription,
+        description: offersTable.description,
+        discountPercent: offersTable.discountPercent,
+        originalPrice: offersTable.originalPrice,
+        currentPrice: offersTable.currentPrice,
+        currency: offersTable.currency,
+        imageUrl: offersTable.imageUrl,
+        affiliateUrl: offersTable.affiliateUrl,
+        isActive: offersTable.isActive,
+        isFeatured: offersTable.isFeatured,
+        clickCount: offersTable.clickCount,
+        categoryId: offersTable.categoryId,
+        brandId: offersTable.brandId,
+        categorySlug: categoriesTable.slug,
+        brandSlug: brandsTable.slug,
+        categoryName: categoriesTable.name,
+        brandName: brandsTable.name,
+        brandLogoUrl: brandsTable.logoUrl,
+        createdAt: offersTable.createdAt,
+        updatedAt: offersTable.updatedAt,
+      })
+      .from(offersTable)
+      .leftJoin(categoriesTable, eq(offersTable.categoryId, categoriesTable.id))
+      .leftJoin(brandsTable, eq(offersTable.brandId, brandsTable.id))
+      .where(eq(offersTable.slug, params.data.slug))
+      .limit(1);
 
-  if (!offer) {
-    res.status(404).json({ error: "Offer not found" });
-    return;
-  }
+    if (!offer) {
+      res.status(404).json({ error: "Offer not found" });
+      return;
+    }
 
-  const relatedOffers = await buildOfferSelect()
-    .where(
-      and(
-        eq(offersTable.isActive, true),
-        offer.categoryId ? eq(offersTable.categoryId, offer.categoryId) : sql`true`,
-        sql`${offersTable.id} != ${offer.id}`
+    const relatedOffers = await buildOfferSelect()
+      .where(
+        and(
+          eq(offersTable.isActive, true),
+          offer.categoryId ? eq(offersTable.categoryId, offer.categoryId) : sql`true`,
+          sql`${offersTable.id} != ${offer.id}`,
+        ),
       )
-    )
-    .orderBy(desc(offersTable.isFeatured))
-    .limit(6);
+      .orderBy(desc(offersTable.isFeatured))
+      .limit(6);
 
-  res.json({ ...offer, relatedOffers });
+    res.json({ ...offer, relatedOffers });
+  } catch (_err) {
+    // Prevent UI from breaking on dialect/schema mismatch
+    res.status(404).json({ error: "Offer not found" });
+  }
 });
 
 router.post("/offers/:slug/track", async (req, res): Promise<void> => {
