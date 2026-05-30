@@ -79,11 +79,6 @@ export function Layout({ children }: { children: ReactNode }) {
       <footer className="border-t py-8 bg-muted/40">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} AffiliateDeals. All rights reserved.</p>
-          <div className="mt-4 flex justify-center gap-4">
-            <Link href="/admin" className="hover:text-primary">Admin</Link>
-            <a href="/api/sitemap.xml" target="_blank" className="hover:text-primary">Sitemap</a>
-            <a href="/api/robots.txt" target="_blank" className="hover:text-primary">Robots</a>
-          </div>
         </div>
       </footer>
     </div>
