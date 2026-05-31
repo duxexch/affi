@@ -11,6 +11,8 @@ import { categoriesTable } from "./schema/categories";
 import { brandsTable } from "./schema/brands";
 import { blogPostsTable } from "./schema/blog_posts";
 import { seoPagesTable } from "./schema/seo_pages";
+import { footballTeamsTable } from "./schema/football_teams";
+import { footballPredictionRequestsTable } from "./schema/football_prediction_requests";
 import { couponsTable } from "./schema/coupons";
 import { clicksTable } from "./schema/clicks";
 
@@ -27,6 +29,8 @@ const drizzleSchema = {
   brandsTable,
   blogPostsTable,
   seoPagesTable,
+  footballTeamsTable,
+  footballPredictionRequestsTable,
   couponsTable,
   clicksTable,
 };
@@ -67,8 +71,13 @@ export const db = drizzle(pool, { schema: drizzleSchema, mode: "default" as cons
 export { usersTable } from "./schema/users";
 export { sessionsTable } from "./schema/sessions";
 
-// Explicit named exports for TS consumers (prevents “missing export member” issues).
+/**
+ * Explicit named exports for TS consumers (prevents “missing export member” issues).
+ * We keep these in sync with the new MVP tables to avoid typecheck drift.
+ */
 export { seoPagesTable } from "./schema/seo_pages";
+export { footballTeamsTable } from "./schema/football_teams";
+export { footballPredictionRequestsTable } from "./schema/football_prediction_requests";
 
 // Re-export remaining schema tables for TypeScript.
 // We intentionally do NOT include them in `drizzleSchema` (MySQL runtime/auth compatibility),

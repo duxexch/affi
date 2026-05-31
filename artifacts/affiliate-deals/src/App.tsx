@@ -28,6 +28,8 @@ import AdminBlog from "@/pages/admin/blog";
 import AdminIndexing from "@/pages/admin/indexing";
 import AdminUsers from "@/pages/admin/users";
 import AdminSeoPages from "@/pages/admin/seo-pages";
+import FootballPredict from "@/pages/football-predict";
+import AdminFootballPredictions from "@/pages/admin/football-predictions";
 
 // Wrap admin pages with auth guard
 const ProtectedDashboard = withAdminAuth(AdminDashboard);
@@ -38,6 +40,7 @@ const ProtectedBlog = withAdminAuth(AdminBlog);
 const ProtectedIndexing = withAdminAuth(AdminIndexing);
 const ProtectedUsers = withAdminAuth(AdminUsers);
 const ProtectedSeoPages = withAdminAuth(AdminSeoPages);
+const ProtectedFootballPredictions = withAdminAuth(AdminFootballPredictions);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +64,7 @@ function Router() {
       <Route path="/blog" component={BlogList} />
       <Route path="/blog/:slug" component={BlogPostDetail} />
       <Route path="/search" component={SearchResults} />
+      <Route path="/football" component={FootballPredict} />
 
       {/* Fixed SEO pages */}
       <Route path="/about" component={() => <SeoFixedPage slug="about" />} />
@@ -83,6 +87,7 @@ function Router() {
       <Route path="/admin/seo-pages" component={ProtectedSeoPages} />
       <Route path="/admin/indexing" component={ProtectedIndexing} />
       <Route path="/admin/users" component={ProtectedUsers} />
+      <Route path="/admin/football-predictions" component={ProtectedFootballPredictions} />
 
       <Route component={NotFound} />
     </Switch>

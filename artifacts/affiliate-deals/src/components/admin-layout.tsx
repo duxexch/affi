@@ -24,6 +24,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { href: "/admin/brands", icon: Building2, label: "Brands" },
     { href: "/admin/blog", icon: FileText, label: "Blog" },
     { href: "/admin/seo-pages", icon: FileText, label: "SEO Pages" },
+    { href: "/admin/football-predictions", icon: Zap, label: "Football Analytics" },
     { href: "/admin/indexing", icon: Activity, label: "Indexing Queue" },
     { href: "/admin/users", icon: Users, label: "Users" },
   ];

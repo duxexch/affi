@@ -36,6 +36,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/categories", label: "Categories" },
     { href: "/brands", label: "Brands" },
     { href: "/blog", label: "Blog" },
+    { href: "/football", label: "Football" },
     ...seoLinks,
   ];
 

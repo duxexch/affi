@@ -9,3 +9,5 @@ export * from "./audit_logs";
 export * from "./coupons";
 export * from "./clicks";
 export * from "./seo_pages";
+export * from "./football_teams";
+export * from "./football_prediction_requests";
